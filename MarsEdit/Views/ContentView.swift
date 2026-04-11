@@ -1,0 +1,191 @@
+import SwiftUI
+
+struct ContentView: View {
+    @ObservedObject var document: MarkdownDocument
+    @EnvironmentObject var settings: AppSettings
+
+    @State private var viewMode: ViewMode = .split
+    @State private var cursorPosition: (line: Int, column: Int) = (1, 1)
+    @State private var outlineItems: [OutlineItem] = []
+    @State private var toastMessage: String?
+    @State private var showFindReplace = false
+    @State private var showReplace = false
+    @State private var dividerPosition: CGFloat = 0.5
+
+    // Find & Replace state (using NSTextView's built-in find bar)
+    @State private var findMatches: Int = 0
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Toolbar
+            if settings.toolbarVisible {
+                ToolbarView()
+                Divider()
+            }
+
+            // Main content area
+            HStack(spacing: 0) {
+                // Outline sidebar
+                if settings.sidebarVisible {
+                    OutlineSidebar(items: outlineItems)
+                    Divider()
+                }
+
+                // Editor / Preview split
+                GeometryReader { geometry in
+                    HSplitView {
+                        if viewMode != .previewOnly {
+                            EditorView(
+                                document: document,
+                                cursorPosition: $cursorPosition
+                            )
+                            .frame(minWidth: 200)
+                        }
+
+                        if viewMode != .editorOnly {
+                            PreviewView(
+                                document: document,
+                                baseURL: document.fileURL?.deletingLastPathComponent()
+                            )
+                            .frame(minWidth: 200)
+                        }
+                    }
+                }
+            }
+
+            Divider()
+
+            // Status bar
+            StatusBarView(
+                document: document,
+                cursorPosition: cursorPosition
+            )
+        }
+        .overlay(alignment: .top) {
+            // Toast notification
+            if let message = toastMessage {
+                ToastView(message: message)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .padding(.top, settings.toolbarVisible ? 44 : 8)
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .cycleViewMode)) { _ in
+            withAnimation(.easeInOut(duration: 0.2)) {
+                viewMode = viewMode.next
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .showToast)) { notification in
+            if let message = notification.object as? String {
+                showToast(message)
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .exportHTML)) { _ in
+            exportHTML()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .exportPDF)) { _ in
+            exportPDF()
+        }
+        .onChange(of: document.text) { newValue in
+            updateOutline(text: newValue)
+            checkLargeFile(text: newValue)
+        }
+        .onAppear {
+            updateOutline(text: document.text)
+        }
+    }
+
+    // MARK: - Outline
+
+    private func updateOutline(text: String) {
+        outlineItems = OutlineParser.parse(text)
+    }
+
+    // MARK: - Large File Warning
+
+    private func checkLargeFile(text: String) {
+        if document.isLargeFile {
+            showToast("Large file — some features like live preview may be slower.")
+        }
+    }
+
+    // MARK: - Toast
+
+    private func showToast(_ message: String) {
+        withAnimation {
+            toastMessage = message
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
+            withAnimation {
+                toastMessage = nil
+            }
+        }
+    }
+
+    // MARK: - Export HTML
+
+    private func exportHTML() {
+        let theme = settings.currentTheme
+        let exporter = HTMLExporter(theme: theme)
+        let html = exporter.export(markdown: document.text)
+
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.html]
+        panel.nameFieldStringValue = suggestedFileName(extension: "html")
+        panel.begin { response in
+            if response == .OK, let url = panel.url {
+                try? html.write(to: url, atomically: true, encoding: .utf8)
+            }
+        }
+    }
+
+    // MARK: - Export PDF
+
+    private func exportPDF() {
+        let theme: Theme
+        if !settings.pdfExportThemeId.isEmpty, let t = Theme.theme(for: settings.pdfExportThemeId) {
+            theme = t
+        } else {
+            theme = settings.currentTheme
+        }
+
+        let exporter = PDFExporter(theme: theme, pageSize: settings.defaultPageSize)
+        let html = HTMLExporter(theme: theme).export(markdown: document.text)
+
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.pdf]
+        panel.nameFieldStringValue = suggestedFileName(extension: "pdf")
+        panel.begin { response in
+            if response == .OK, let url = panel.url {
+                exporter.exportPDF(html: html, to: url)
+            }
+        }
+    }
+
+    private func suggestedFileName(extension ext: String) -> String {
+        if let fileURL = document.fileURL {
+            return fileURL.deletingPathExtension().lastPathComponent + "." + ext
+        }
+        // Use first H1 if available
+        for item in outlineItems where item.level == 1 {
+            let safe = item.title.replacingOccurrences(of: "[^a-zA-Z0-9 -]", with: "", options: .regularExpression)
+            return safe + "." + ext
+        }
+        return "Untitled." + ext
+    }
+}
+
+// MARK: - Toast View
+
+struct ToastView: View {
+    let message: String
+
+    var body: some View {
+        Text(message)
+            .font(.system(size: 12))
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(.ultraThickMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .shadow(radius: 4)
+    }
+}

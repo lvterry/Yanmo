@@ -1,0 +1,217 @@
+import Foundation
+import Markdown
+
+struct MarkdownRenderer {
+    /// Converts Markdown source text to an HTML string using swift-markdown (GFM).
+    static func renderHTML(from markdown: String) -> String {
+        let document = Document(parsing: markdown, options: [.parseBlockDirectives])
+        var visitor = HTMLVisitor()
+        return visitor.visit(document)
+    }
+
+    /// Wraps rendered HTML body with a full HTML document including theme CSS.
+    static func fullHTML(body: String, css: String, title: String = "") -> String {
+        """
+        <!DOCTYPE html>
+        <html>
+        <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>\(escapeHTML(title))</title>
+        <style>
+        \(css)
+        </style>
+        </head>
+        <body>
+        \(body)
+        </body>
+        </html>
+        """
+    }
+
+    static func escapeHTML(_ text: String) -> String {
+        text.replacingOccurrences(of: "&", with: "&amp;")
+            .replacingOccurrences(of: "<", with: "&lt;")
+            .replacingOccurrences(of: ">", with: "&gt;")
+            .replacingOccurrences(of: "\"", with: "&quot;")
+    }
+}
+
+// MARK: - HTML Visitor
+
+private struct HTMLVisitor: MarkupVisitor {
+    typealias Result = String
+
+    mutating func defaultVisit(_ markup: any Markup) -> String {
+        markup.children.map { visit($0) }.joined()
+    }
+
+    // MARK: Block Elements
+
+    mutating func visitDocument(_ document: Document) -> String {
+        document.children.map { visit($0) }.joined(separator: "\n")
+    }
+
+    mutating func visitHeading(_ heading: Heading) -> String {
+        let tag = "h\(heading.level)"
+        let content = heading.children.map { visit($0) }.joined()
+        let id = content.lowercased()
+            .replacingOccurrences(of: " ", with: "-")
+            .filter { $0.isLetter || $0.isNumber || $0 == "-" }
+        return "<\(tag) id=\"\(id)\">\(content)</\(tag)>"
+    }
+
+    mutating func visitParagraph(_ paragraph: Paragraph) -> String {
+        let content = paragraph.children.map { visit($0) }.joined()
+        return "<p>\(content)</p>"
+    }
+
+    mutating func visitBlockQuote(_ blockQuote: BlockQuote) -> String {
+        let content = blockQuote.children.map { visit($0) }.joined(separator: "\n")
+        return "<blockquote>\n\(content)\n</blockquote>"
+    }
+
+    mutating func visitCodeBlock(_ codeBlock: CodeBlock) -> String {
+        let lang = codeBlock.language ?? ""
+        let escaped = MarkdownRenderer.escapeHTML(codeBlock.code)
+        let langAttr = lang.isEmpty ? "" : " class=\"language-\(lang)\""
+        return "<pre><code\(langAttr)>\(escaped)</code></pre>"
+    }
+
+    mutating func visitOrderedList(_ orderedList: OrderedList) -> String {
+        let items = orderedList.children.map { visit($0) }.joined(separator: "\n")
+        let start = orderedList.startIndex
+        let startAttr = start != 1 ? " start=\"\(start)\"" : ""
+        return "<ol\(startAttr)>\n\(items)\n</ol>"
+    }
+
+    mutating func visitUnorderedList(_ unorderedList: UnorderedList) -> String {
+        let isTaskList = unorderedList.children.contains { child in
+            if let item = child as? ListItem {
+                return item.checkbox != nil
+            }
+            return false
+        }
+        let classAttr = isTaskList ? " class=\"task-list\"" : ""
+        let items = unorderedList.children.map { visit($0) }.joined(separator: "\n")
+        return "<ul\(classAttr)>\n\(items)\n</ul>"
+    }
+
+    mutating func visitListItem(_ listItem: ListItem) -> String {
+        if let checkbox = listItem.checkbox {
+            // For task list items, unwrap paragraph children so the text
+            // renders inline next to the checkbox instead of as a block <p>.
+            let checked = checkbox == .checked ? " checked" : ""
+            var parts: [String] = []
+            for child in listItem.children {
+                if let para = child as? Paragraph {
+                    // Render paragraph children directly (inline content) without the <p> wrapper
+                    let inline = para.children.map { visit($0) }.joined()
+                    parts.append(inline)
+                } else {
+                    parts.append(visit(child))
+                }
+            }
+            let content = parts.joined(separator: "\n")
+            return "<li class=\"task-list-item\"><input type=\"checkbox\" disabled\(checked)> \(content)</li>"
+        }
+        let content = listItem.children.map { visit($0) }.joined(separator: "\n")
+        return "<li>\(content)</li>"
+    }
+
+    mutating func visitThematicBreak(_ thematicBreak: ThematicBreak) -> String {
+        "<hr>"
+    }
+
+    mutating func visitHTMLBlock(_ html: HTMLBlock) -> String {
+        html.rawHTML
+    }
+
+    mutating func visitTable(_ table: Table) -> String {
+        var result = "<table>\n<thead>\n<tr>\n"
+        let head = table.head
+        for cell in head.cells {
+            var cellContent: [String] = []
+            for child in cell.children {
+                cellContent.append(visit(child))
+            }
+            let content = cellContent.joined()
+            result += "<th>\(content)</th>\n"
+        }
+        result += "</tr>\n</thead>\n"
+
+        let bodyRows = Array(table.body.rows)
+        if !bodyRows.isEmpty {
+            result += "<tbody>\n"
+            for row in bodyRows {
+                result += "<tr>\n"
+                for cell in row.cells {
+                    var cellContent: [String] = []
+                    for child in cell.children {
+                        cellContent.append(visit(child))
+                    }
+                    let content = cellContent.joined()
+                    result += "<td>\(content)</td>\n"
+                }
+                result += "</tr>\n"
+            }
+            result += "</tbody>\n"
+        }
+        result += "</table>"
+        return result
+    }
+
+    // MARK: Inline Elements
+
+    mutating func visitText(_ text: Text) -> String {
+        MarkdownRenderer.escapeHTML(text.string)
+    }
+
+    mutating func visitStrong(_ strong: Strong) -> String {
+        let content = strong.children.map { visit($0) }.joined()
+        return "<strong>\(content)</strong>"
+    }
+
+    mutating func visitEmphasis(_ emphasis: Emphasis) -> String {
+        let content = emphasis.children.map { visit($0) }.joined()
+        return "<em>\(content)</em>"
+    }
+
+    mutating func visitStrikethrough(_ strikethrough: Strikethrough) -> String {
+        let content = strikethrough.children.map { visit($0) }.joined()
+        return "<del>\(content)</del>"
+    }
+
+    mutating func visitInlineCode(_ inlineCode: InlineCode) -> String {
+        "<code>\(MarkdownRenderer.escapeHTML(inlineCode.code))</code>"
+    }
+
+    mutating func visitLink(_ link: Link) -> String {
+        let content = link.children.map { visit($0) }.joined()
+        let dest = link.destination ?? ""
+        return "<a href=\"\(dest)\">\(content)</a>"
+    }
+
+    mutating func visitImage(_ image: Image) -> String {
+        let alt = image.children.map { visit($0) }.joined()
+        let src = image.source ?? ""
+        let title = image.title.map { " title=\"\(MarkdownRenderer.escapeHTML($0))\"" } ?? ""
+        return "<img src=\"\(src)\" alt=\"\(MarkdownRenderer.escapeHTML(alt))\"\(title)>"
+    }
+
+    mutating func visitLineBreak(_ lineBreak: LineBreak) -> String {
+        "<br>"
+    }
+
+    mutating func visitSoftBreak(_ softBreak: SoftBreak) -> String {
+        "\n"
+    }
+
+    mutating func visitInlineHTML(_ html: InlineHTML) -> String {
+        html.rawHTML
+    }
+
+    mutating func visitSymbolLink(_ symbolLink: SymbolLink) -> String {
+        "<code>\(MarkdownRenderer.escapeHTML(symbolLink.destination ?? ""))</code>"
+    }
+}

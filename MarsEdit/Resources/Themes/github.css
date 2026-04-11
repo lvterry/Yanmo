@@ -1,0 +1,170 @@
+/* GitHub Light Theme */
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+    line-height: 1.6;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 24px 32px;
+    background-color: #ffffff;
+    color: #24292f;
+    -webkit-text-size-adjust: 100%;
+    word-wrap: break-word;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+    margin-top: 24px;
+    margin-bottom: 16px;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+h1 {
+    font-size: 2em;
+    padding-bottom: 0.3em;
+    border-bottom: 1px solid #d8dee4;
+}
+
+h2 {
+    font-size: 1.5em;
+    padding-bottom: 0.3em;
+    border-bottom: 1px solid #d8dee4;
+}
+
+h3 { font-size: 1.25em; }
+h4 { font-size: 1em; }
+h5 { font-size: 0.875em; }
+h6 { font-size: 0.85em; color: #656d76; }
+
+/* Paragraphs and lists */
+p {
+    margin-top: 0;
+    margin-bottom: 16px;
+}
+
+ul, ol {
+    margin-top: 0;
+    margin-bottom: 16px;
+    padding-left: 2em;
+}
+
+li {
+    margin-bottom: 4px;
+}
+
+li + li {
+    margin-top: 4px;
+}
+
+/* Links */
+a {
+    color: #0969da;
+    text-decoration: underline;
+}
+
+a:hover {
+    color: #0550ae;
+}
+
+/* Inline code */
+code {
+    font-family: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
+    background-color: #f6f8fa;
+    padding: 0.2em 0.4em;
+    border-radius: 6px;
+    font-size: 0.85em;
+    border: 1px solid #d0d7de;
+}
+
+/* Code blocks */
+pre {
+    background-color: #f6f8fa;
+    padding: 16px;
+    border-radius: 6px;
+    overflow-x: auto;
+    line-height: 1.45;
+    margin-top: 0;
+    margin-bottom: 16px;
+    border: 1px solid #d0d7de;
+}
+
+pre code {
+    background: none;
+    padding: 0;
+    border-radius: 0;
+    border: none;
+    font-size: 0.85em;
+}
+
+/* Blockquote */
+blockquote {
+    border-left: 4px solid #d0d7de;
+    padding: 0 16px;
+    margin: 0 0 16px 0;
+    color: #656d76;
+}
+
+blockquote > :first-child {
+    margin-top: 0;
+}
+
+blockquote > :last-child {
+    margin-bottom: 0;
+}
+
+/* Tables */
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 16px;
+    overflow: auto;
+    display: block;
+}
+
+th, td {
+    border: 1px solid #d0d7de;
+    padding: 6px 13px;
+    text-align: left;
+}
+
+th {
+    font-weight: 600;
+    background-color: #f6f8fa;
+}
+
+tr:nth-child(even) {
+    background-color: #f6f8fa;
+}
+
+/* Images */
+img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+}
+
+/* Horizontal rule */
+hr {
+    border: none;
+    border-top: 1px solid #d8dee4;
+    margin: 24px 0;
+    height: 0;
+    overflow: hidden;
+}
+
+/* Task lists */
+ul:has(> li > input[type="checkbox"]) {
+    list-style: none;
+    padding-left: 1.5em;
+}
+
+ul > li > input[type="checkbox"] {
+    margin-right: 0.5em;
+}
+
+/* Strikethrough */
+del {
+    text-decoration: line-through;
+    color: #656d76;
+}

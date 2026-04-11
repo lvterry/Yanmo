@@ -1,0 +1,35 @@
+name: MarsEdit
+options:
+  bundleIdPrefix: com.marsedit
+  deploymentTarget:
+    macOS: "13.0"
+
+packages:
+  swift-markdown:
+    url: https://github.com/apple/swift-markdown.git
+    from: "0.4.0"
+
+targets:
+  MarsEdit:
+    type: application
+    platform: macOS
+    sources:
+      - path: MarsEdit
+        excludes:
+          - "Resources/**"
+      - path: MarsEdit/Resources
+        type: folder
+        buildPhase: resources
+    dependencies:
+      - package: swift-markdown
+        product: Markdown
+    settings:
+      base:
+        SWIFT_VERSION: "5.9"
+        GENERATE_INFOPLIST_FILE: "NO"
+        INFOPLIST_FILE: MarsEdit/Info.plist
+        CODE_SIGN_ENTITLEMENTS: MarsEdit/MarsEdit.entitlements
+        PRODUCT_BUNDLE_IDENTIFIER: com.marsedit.app
+        MACOSX_DEPLOYMENT_TARGET: "13.0"
+    entitlements:
+      path: MarsEdit/MarsEdit.entitlements

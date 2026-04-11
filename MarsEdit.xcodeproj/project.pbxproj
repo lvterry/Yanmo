@@ -1,0 +1,465 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		054CE5EB3122518217B9AB5A /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 395BF64CF82855D86EBF6ADF /* PreferencesView.swift */; };
+		1C9F3A013444148F9391DB69 /* FindReplaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8681E602267D375E6BB19A97 /* FindReplaceView.swift */; };
+		29FB917002D9F0C99E9920F6 /* PDFExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EBCC1AED90F4E9D817849CD /* PDFExporter.swift */; };
+		389E52EB58448E98E2F7B108 /* MarkdownRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E8BD9EC61D10243746D8375 /* MarkdownRenderer.swift */; };
+		39B05F225A3403EA2B5F8EFB /* OutlineItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE1F66ED40FA0CF63619A642 /* OutlineItem.swift */; };
+		3A5A19B1EA2BD997365270FF /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC25AE91581B786D203B1242 /* Theme.swift */; };
+		42560957492ED12073514BFC /* SyntaxHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E84737812911E50B90BAD07 /* SyntaxHighlighter.swift */; };
+		572BBA9351AD740394798F4C /* OutlineSidebar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80AA1CD18CAE69F9F389B729 /* OutlineSidebar.swift */; };
+		63E14B19C7B2A071E738F8D9 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3797CA074DCFEDA92620494F /* ContentView.swift */; };
+		85330739355F9C463E4CD075 /* StatusBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F5AA75F8D7583B0C4F9EC47 /* StatusBarView.swift */; };
+		8FCCDA2AEF867CE33430E2AB /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07E12825E60D469770896AD0 /* AppSettings.swift */; };
+		929BFDB34349884B9D3204E8 /* ViewMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E4312776DC33D2DB60D5F74 /* ViewMode.swift */; };
+		A26DA0986A8ED17D4499DAB6 /* MarsEditApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38D0B910556CD1F896CE0C9B /* MarsEditApp.swift */; };
+		A81026088E46137359D19D47 /* Resources in Resources */ = {isa = PBXBuildFile; fileRef = 6E4CFD1F4E760E384D7320A0 /* Resources */; };
+		AE8524BA70118DEF47401A8E /* HTMLExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2F65D66271440CB5F9CE106 /* HTMLExporter.swift */; };
+		D2F950B026B5841AB9850CBE /* EditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BBABC595D4CDD5A500EAC60 /* EditorView.swift */; };
+		F5B20C085CB4D713E52E240C /* ToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C3431F1D6C2B39029D9AABA /* ToolbarView.swift */; };
+		F68D30B32D3A2F042D0BAC6A /* PreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3987A695942E6DBB85EF8C88 /* PreviewView.swift */; };
+		F6BB4DF5FD396147915CB80D /* Markdown in Frameworks */ = {isa = PBXBuildFile; productRef = 26711A8252F0CA1D8824652F /* Markdown */; };
+		FF3979BCF2255A97C2B869AD /* MarkdownDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20A75AFE4A1D3E89F3DBC781 /* MarkdownDocument.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		07E12825E60D469770896AD0 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		0BBABC595D4CDD5A500EAC60 /* EditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorView.swift; sourceTree = "<group>"; };
+		0C3431F1D6C2B39029D9AABA /* ToolbarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolbarView.swift; sourceTree = "<group>"; };
+		1E8BD9EC61D10243746D8375 /* MarkdownRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownRenderer.swift; sourceTree = "<group>"; };
+		20A75AFE4A1D3E89F3DBC781 /* MarkdownDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownDocument.swift; sourceTree = "<group>"; };
+		3797CA074DCFEDA92620494F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		37DB177217C2758BFC8B7C6C /* MarsEdit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MarsEdit.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		38D0B910556CD1F896CE0C9B /* MarsEditApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarsEditApp.swift; sourceTree = "<group>"; };
+		395BF64CF82855D86EBF6ADF /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
+		3987A695942E6DBB85EF8C88 /* PreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewView.swift; sourceTree = "<group>"; };
+		5A6C29EF814D1782BFA80831 /* MarsEdit.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MarsEdit.entitlements; sourceTree = "<group>"; };
+		6E4CFD1F4E760E384D7320A0 /* Resources */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Resources; path = MarsEdit/Resources; sourceTree = SOURCE_ROOT; };
+		7E4312776DC33D2DB60D5F74 /* ViewMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewMode.swift; sourceTree = "<group>"; };
+		80AA1CD18CAE69F9F389B729 /* OutlineSidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutlineSidebar.swift; sourceTree = "<group>"; };
+		8681E602267D375E6BB19A97 /* FindReplaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FindReplaceView.swift; sourceTree = "<group>"; };
+		8EBCC1AED90F4E9D817849CD /* PDFExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFExporter.swift; sourceTree = "<group>"; };
+		9E84737812911E50B90BAD07 /* SyntaxHighlighter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntaxHighlighter.swift; sourceTree = "<group>"; };
+		9F5AA75F8D7583B0C4F9EC47 /* StatusBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarView.swift; sourceTree = "<group>"; };
+		B54F2C6F9F7C453961CBB8BA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		BC25AE91581B786D203B1242 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		BE1F66ED40FA0CF63619A642 /* OutlineItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutlineItem.swift; sourceTree = "<group>"; };
+		E2F65D66271440CB5F9CE106 /* HTMLExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTMLExporter.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		157F844C4E22920EB59EA22D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F6BB4DF5FD396147915CB80D /* Markdown in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		04098D33C13E891E461050E7 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				37DB177217C2758BFC8B7C6C /* MarsEdit.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		44D526E77E9E008DAE1F3D37 /* Preferences */ = {
+			isa = PBXGroup;
+			children = (
+				395BF64CF82855D86EBF6ADF /* PreferencesView.swift */,
+			);
+			path = Preferences;
+			sourceTree = "<group>";
+		};
+		45C54025417235D821859C16 = {
+			isa = PBXGroup;
+			children = (
+				6E4CFD1F4E760E384D7320A0 /* Resources */,
+				C45BAD11DA7C6F4A2D04C3D7 /* MarsEdit */,
+				04098D33C13E891E461050E7 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		632AA5571E4835CA1ED943EF /* Document */ = {
+			isa = PBXGroup;
+			children = (
+				20A75AFE4A1D3E89F3DBC781 /* MarkdownDocument.swift */,
+			);
+			path = Document;
+			sourceTree = "<group>";
+		};
+		6345566C86E72242370D9B0D /* App */ = {
+			isa = PBXGroup;
+			children = (
+				38D0B910556CD1F896CE0C9B /* MarsEditApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		9C065F0056C40B72223FA187 /* Export */ = {
+			isa = PBXGroup;
+			children = (
+				E2F65D66271440CB5F9CE106 /* HTMLExporter.swift */,
+				8EBCC1AED90F4E9D817849CD /* PDFExporter.swift */,
+			);
+			path = Export;
+			sourceTree = "<group>";
+		};
+		A897877DCC266778E9CBC864 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				07E12825E60D469770896AD0 /* AppSettings.swift */,
+				BE1F66ED40FA0CF63619A642 /* OutlineItem.swift */,
+				BC25AE91581B786D203B1242 /* Theme.swift */,
+				7E4312776DC33D2DB60D5F74 /* ViewMode.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		C45BAD11DA7C6F4A2D04C3D7 /* MarsEdit */ = {
+			isa = PBXGroup;
+			children = (
+				B54F2C6F9F7C453961CBB8BA /* Info.plist */,
+				5A6C29EF814D1782BFA80831 /* MarsEdit.entitlements */,
+				6345566C86E72242370D9B0D /* App */,
+				632AA5571E4835CA1ED943EF /* Document */,
+				9C065F0056C40B72223FA187 /* Export */,
+				A897877DCC266778E9CBC864 /* Models */,
+				44D526E77E9E008DAE1F3D37 /* Preferences */,
+				E7E09D1A633DF43459952C75 /* Rendering */,
+				E57FA953711D47C6DBB46507 /* Views */,
+			);
+			path = MarsEdit;
+			sourceTree = "<group>";
+		};
+		E57FA953711D47C6DBB46507 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				3797CA074DCFEDA92620494F /* ContentView.swift */,
+				0BBABC595D4CDD5A500EAC60 /* EditorView.swift */,
+				8681E602267D375E6BB19A97 /* FindReplaceView.swift */,
+				80AA1CD18CAE69F9F389B729 /* OutlineSidebar.swift */,
+				3987A695942E6DBB85EF8C88 /* PreviewView.swift */,
+				9F5AA75F8D7583B0C4F9EC47 /* StatusBarView.swift */,
+				0C3431F1D6C2B39029D9AABA /* ToolbarView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		E7E09D1A633DF43459952C75 /* Rendering */ = {
+			isa = PBXGroup;
+			children = (
+				1E8BD9EC61D10243746D8375 /* MarkdownRenderer.swift */,
+				9E84737812911E50B90BAD07 /* SyntaxHighlighter.swift */,
+			);
+			path = Rendering;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		92955BBB7A770AE2AE43B63D /* MarsEdit */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 624EB9BBC57B0C6BD62CE38F /* Build configuration list for PBXNativeTarget "MarsEdit" */;
+			buildPhases = (
+				60D4DB0236A6DA243AD1F8AE /* Sources */,
+				18A132B52206C4564A46B300 /* Resources */,
+				157F844C4E22920EB59EA22D /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MarsEdit;
+			packageProductDependencies = (
+				26711A8252F0CA1D8824652F /* Markdown */,
+			);
+			productName = MarsEdit;
+			productReference = 37DB177217C2758BFC8B7C6C /* MarsEdit.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D2410C834CF6981E377DE807 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+				};
+			};
+			buildConfigurationList = C3010DCB937E76AF1A766BF1 /* Build configuration list for PBXProject "MarsEdit" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 45C54025417235D821859C16;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				F4216F0B86039832E3A35830 /* XCRemoteSwiftPackageReference "swift-markdown" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 04098D33C13E891E461050E7 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				92955BBB7A770AE2AE43B63D /* MarsEdit */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		18A132B52206C4564A46B300 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A81026088E46137359D19D47 /* Resources in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		60D4DB0236A6DA243AD1F8AE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8FCCDA2AEF867CE33430E2AB /* AppSettings.swift in Sources */,
+				63E14B19C7B2A071E738F8D9 /* ContentView.swift in Sources */,
+				D2F950B026B5841AB9850CBE /* EditorView.swift in Sources */,
+				1C9F3A013444148F9391DB69 /* FindReplaceView.swift in Sources */,
+				AE8524BA70118DEF47401A8E /* HTMLExporter.swift in Sources */,
+				FF3979BCF2255A97C2B869AD /* MarkdownDocument.swift in Sources */,
+				389E52EB58448E98E2F7B108 /* MarkdownRenderer.swift in Sources */,
+				A26DA0986A8ED17D4499DAB6 /* MarsEditApp.swift in Sources */,
+				39B05F225A3403EA2B5F8EFB /* OutlineItem.swift in Sources */,
+				572BBA9351AD740394798F4C /* OutlineSidebar.swift in Sources */,
+				29FB917002D9F0C99E9920F6 /* PDFExporter.swift in Sources */,
+				054CE5EB3122518217B9AB5A /* PreferencesView.swift in Sources */,
+				F68D30B32D3A2F042D0BAC6A /* PreviewView.swift in Sources */,
+				85330739355F9C463E4CD075 /* StatusBarView.swift in Sources */,
+				42560957492ED12073514BFC /* SyntaxHighlighter.swift in Sources */,
+				3A5A19B1EA2BD997365270FF /* Theme.swift in Sources */,
+				F5B20C085CB4D713E52E240C /* ToolbarView.swift in Sources */,
+				929BFDB34349884B9D3204E8 /* ViewMode.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		1FED43E4EA7A9AB4C7802CEF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		6F7842FC954CB16279D671CB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		8D053B5A4766CD453FFFF0C3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = MarsEdit/MarsEdit.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MarsEdit/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.marsedit.app;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		A5A83F7B237FB3B0AC74295C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = MarsEdit/MarsEdit.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MarsEdit/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.marsedit.app;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		624EB9BBC57B0C6BD62CE38F /* Build configuration list for PBXNativeTarget "MarsEdit" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8D053B5A4766CD453FFFF0C3 /* Debug */,
+				A5A83F7B237FB3B0AC74295C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		C3010DCB937E76AF1A766BF1 /* Build configuration list for PBXProject "MarsEdit" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6F7842FC954CB16279D671CB /* Debug */,
+				1FED43E4EA7A9AB4C7802CEF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		F4216F0B86039832E3A35830 /* XCRemoteSwiftPackageReference "swift-markdown" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-markdown.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.4.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		26711A8252F0CA1D8824652F /* Markdown */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F4216F0B86039832E3A35830 /* XCRemoteSwiftPackageReference "swift-markdown" */;
+			productName = Markdown;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = D2410C834CF6981E377DE807 /* Project object */;
+}
