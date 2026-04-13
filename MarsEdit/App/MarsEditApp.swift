@@ -6,7 +6,7 @@ struct MarsEditApp: App {
 
     var body: some Scene {
         DocumentGroup(newDocument: { MarkdownDocument() }) { file in
-            ContentView(document: file.document)
+            ContentView(document: file.document, fileURL: file.fileURL)
                 .environmentObject(settings)
                 .frame(minWidth: 700, minHeight: 500)
         }
@@ -135,10 +135,6 @@ struct MarsEditApp: App {
         }
         .keyboardShortcut("p", modifiers: [.command, .shift])
 
-        Button("Toggle Synchronized Scroll") {
-            settings.syncScrollEnabled.toggle()
-        }
-        .keyboardShortcut("y", modifiers: [.command, .shift])
     }
 
     // MARK: - Export

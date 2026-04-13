@@ -17,6 +17,7 @@ struct MarkdownRenderer {
         <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src * data:; font-src *;">
         <title>\(escapeHTML(title))</title>
         <style>
         \(css)
@@ -34,6 +35,24 @@ struct MarkdownRenderer {
             .replacingOccurrences(of: "<", with: "&lt;")
             .replacingOccurrences(of: ">", with: "&gt;")
             .replacingOccurrences(of: "\"", with: "&quot;")
+    }
+
+    /// Sanitizes a URL for safe insertion into an HTML attribute.
+    /// Blocks dangerous schemes (javascript:, vbscript:, data:text/html)
+    /// and escapes the result for attribute safety.
+    static func sanitizeURL(_ url: String) -> String {
+        let trimmed = url.trimmingCharacters(in: .whitespacesAndNewlines)
+        let lower = trimmed.lowercased()
+            .replacingOccurrences(of: "\t", with: "")
+            .replacingOccurrences(of: "\n", with: "")
+
+        // Block dangerous URL schemes
+        let blocked = ["javascript:", "vbscript:", "data:text/html"]
+        for scheme in blocked {
+            if lower.hasPrefix(scheme) { return "" }
+        }
+
+        return escapeHTML(trimmed)
     }
 }
 
@@ -188,13 +207,13 @@ private struct HTMLVisitor: MarkupVisitor {
 
     mutating func visitLink(_ link: Link) -> String {
         let content = link.children.map { visit($0) }.joined()
-        let dest = link.destination ?? ""
+        let dest = MarkdownRenderer.sanitizeURL(link.destination ?? "")
         return "<a href=\"\(dest)\">\(content)</a>"
     }
 
     mutating func visitImage(_ image: Image) -> String {
         let alt = image.children.map { visit($0) }.joined()
-        let src = image.source ?? ""
+        let src = MarkdownRenderer.sanitizeURL(image.source ?? "")
         let title = image.title.map { " title=\"\(MarkdownRenderer.escapeHTML($0))\"" } ?? ""
         return "<img src=\"\(src)\" alt=\"\(MarkdownRenderer.escapeHTML(alt))\"\(title)>"
     }

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @ObservedObject var document: MarkdownDocument
+    let fileURL: URL?
     @EnvironmentObject var settings: AppSettings
 
     @State private var viewMode: ViewMode = .split
@@ -45,7 +46,7 @@ struct ContentView: View {
                         if viewMode != .editorOnly {
                             PreviewView(
                                 document: document,
-                                baseURL: document.fileURL?.deletingLastPathComponent()
+                                baseURL: fileURL?.deletingLastPathComponent()
                             )
                             .frame(minWidth: 200)
                         }
@@ -91,6 +92,20 @@ struct ContentView: View {
         }
         .onAppear {
             updateOutline(text: document.text)
+            applyAppearanceMode(settings.appearanceMode)
+        }
+        .onChange(of: settings.appearanceMode) { mode in
+            applyAppearanceMode(mode)
+        }
+    }
+
+    // MARK: - Appearance
+
+    private func applyAppearanceMode(_ mode: AppearanceMode) {
+        switch mode {
+        case .light: NSApp.appearance = NSAppearance(named: .aqua)
+        case .dark: NSApp.appearance = NSAppearance(named: .darkAqua)
+        case .system: NSApp.appearance = nil
         }
     }
 
@@ -156,13 +171,13 @@ struct ContentView: View {
         panel.nameFieldStringValue = suggestedFileName(extension: "pdf")
         panel.begin { response in
             if response == .OK, let url = panel.url {
-                exporter.exportPDF(html: html, to: url)
+                exporter.exportPDF(html: html, baseURL: self.fileURL?.deletingLastPathComponent(), to: url)
             }
         }
     }
 
     private func suggestedFileName(extension ext: String) -> String {
-        if let fileURL = document.fileURL {
+        if let fileURL = fileURL {
             return fileURL.deletingPathExtension().lastPathComponent + "." + ext
         }
         // Use first H1 if available

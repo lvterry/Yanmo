@@ -130,6 +130,56 @@ struct SyntaxHighlighter {
         for match in matches {
             storage.addAttribute(.foregroundColor, value: theme.editorLinkColor, range: match.range)
         }
+
+        // Fold base64 embedded images: collapse the data body to near-invisible
+        // while keeping the markdown syntax and a fold indicator visible.
+        foldBase64Images(storage, text: text)
+    }
+
+    /// Visually folds base64 image data in the editor.
+    ///
+    /// For `![alt](data:image/png;base64,<HUGE DATA>)`:
+    /// - `![alt](data:image/png;base64,` — visible, dimmed, normal font
+    /// - `<HUGE DATA>` — collapsed to 0.1pt font, effectively invisible
+    /// - `)` — visible at end
+    ///
+    /// The underlying text is untouched — only the visual rendering changes.
+    private func foldBase64Images(_ storage: NSTextStorage, text: String) {
+        // Match the full ![...](data:image/...;base64,...) pattern
+        let pattern = "(!\\[[^\\]]*\\]\\(data:image/[^;]+;base64,)([A-Za-z0-9+/=\\s]{64,})(\\))"
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators]) else { return }
+
+        let matches = regex.matches(in: text, range: NSRange(location: 0, length: text.utf16.count))
+        let dimmedColor = NSColor.secondaryLabelColor.withAlphaComponent(0.5)
+
+        for match in matches {
+            guard match.numberOfRanges == 4 else { continue }
+
+            let prefixRange = match.range(at: 1)  // ![alt](data:image/png;base64,
+            let dataRange = match.range(at: 2)     // the actual base64 data
+            let suffixRange = match.range(at: 3)   // )
+
+            // Style the prefix: visible but dimmed
+            storage.addAttributes([
+                .foregroundColor: dimmedColor,
+                .font: NSFont.monospacedSystemFont(ofSize: font.pointSize - 2, weight: .regular),
+            ], range: prefixRange)
+
+            // Collapse the base64 body to near-invisible (0.1pt font, transparent)
+            // The text remains in the document for copy/paste/save,
+            // but takes up virtually no visual space.
+            let tinyFont = NSFont.monospacedSystemFont(ofSize: 0.1, weight: .regular)
+            storage.addAttributes([
+                .font: tinyFont,
+                .foregroundColor: NSColor.clear,
+            ], range: dataRange)
+
+            // Style the closing paren: dimmed
+            storage.addAttributes([
+                .foregroundColor: dimmedColor,
+                .font: NSFont.monospacedSystemFont(ofSize: font.pointSize - 2, weight: .regular),
+            ], range: suffixRange)
+        }
     }
 
     // MARK: - Blockquotes

@@ -5,9 +5,6 @@ struct PreferencesView: View {
 
     var body: some View {
         TabView {
-            GeneralTab()
-                .tabItem { Label("General", systemImage: "gear") }
-
             EditorTab()
                 .tabItem { Label("Editor", systemImage: "pencil") }
 
@@ -19,26 +16,6 @@ struct PreferencesView: View {
         }
         .environmentObject(settings)
         .frame(width: 480, height: 340)
-    }
-}
-
-// MARK: - General Tab
-
-private struct GeneralTab: View {
-    @EnvironmentObject var settings: AppSettings
-
-    var body: some View {
-        Form {
-            Picker("On launch:", selection: $settings.launchBehavior) {
-                ForEach(LaunchBehavior.allCases, id: \.self) { behavior in
-                    Text(behavior.label).tag(behavior)
-                }
-            }
-
-            Toggle("Auto-save", isOn: $settings.autoSaveEnabled)
-        }
-        .formStyle(.grouped)
-        .padding()
     }
 }
 
@@ -58,15 +35,6 @@ private struct EditorTab: View {
                     .labelsHidden()
             }
 
-            HStack {
-                Text("Line height:")
-                Slider(value: $settings.editorLineHeight, in: 1.0...3.0, step: 0.1)
-                Text(String(format: "%.1f", settings.editorLineHeight))
-                    .frame(width: 30)
-            }
-
-            Toggle("Show line numbers", isOn: $settings.showLineNumbers)
-            Toggle("Highlight current line", isOn: $settings.highlightCurrentLine)
             Toggle("Word wrap", isOn: $settings.wordWrap)
 
             HStack {

@@ -1,20 +1,6 @@
 import SwiftUI
 import Combine
 
-enum LaunchBehavior: String, CaseIterable, Codable {
-    case openLastFile = "openLast"
-    case showOpenDialog = "showOpen"
-    case newDocument = "newDocument"
-
-    var label: String {
-        switch self {
-        case .openLastFile: return "Open last file"
-        case .showOpenDialog: return "Show Open dialog"
-        case .newDocument: return "New document"
-        }
-    }
-}
-
 enum AppearanceMode: String, CaseIterable, Codable {
     case system
     case light
@@ -39,16 +25,9 @@ enum DefaultPageSize: String, CaseIterable, Codable {
 final class AppSettings: ObservableObject {
     static let shared = AppSettings()
 
-    // MARK: - General
-    @AppStorage("launchBehavior") var launchBehavior: LaunchBehavior = .showOpenDialog
-    @AppStorage("autoSaveEnabled") var autoSaveEnabled: Bool = true
-
     // MARK: - Editor
     @AppStorage("editorFontName") var editorFontName: String = "JetBrains Mono"
     @AppStorage("editorFontSize") var editorFontSize: Double = 15.0
-    @AppStorage("editorLineHeight") var editorLineHeight: Double = 1.6
-    @AppStorage("showLineNumbers") var showLineNumbers: Bool = false
-    @AppStorage("highlightCurrentLine") var highlightCurrentLine: Bool = true
     @AppStorage("wordWrap") var wordWrap: Bool = true
     @AppStorage("readingSpeedWPM") var readingSpeedWPM: Int = 200
 
@@ -63,13 +42,17 @@ final class AppSettings: ObservableObject {
     // MARK: - View State
     @AppStorage("toolbarVisible") var toolbarVisible: Bool = true
     @AppStorage("sidebarVisible") var sidebarVisible: Bool = false
-    @AppStorage("syncScrollEnabled") var syncScrollEnabled: Bool = false
 
     var currentTheme: Theme {
         if !selectedThemeId.isEmpty, let theme = Theme.theme(for: selectedThemeId) {
             return theme
         }
-        let isDark = NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        let isDark: Bool
+        switch appearanceMode {
+        case .light: isDark = false
+        case .dark: isDark = true
+        case .system: isDark = NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        }
         return isDark ? Theme.defaultDark : Theme.defaultLight
     }
 

@@ -31,7 +31,7 @@ final class PDFExporter: NSObject, WKNavigationDelegate {
         pageDimensions.width - marginPoints * 2
     }
 
-    func exportPDF(html: String, to url: URL) {
+    func exportPDF(html: String, baseURL: URL?, to url: URL) {
         retainedSelf = self
         outputURL = url
 
@@ -106,7 +106,7 @@ final class PDFExporter: NSObject, WKNavigationDelegate {
         window.orderBack(nil)
         self.offscreenWindow = window
 
-        webView.loadHTMLString(augmentedHTML, baseURL: nil)
+        webView.loadHTMLString(augmentedHTML, baseURL: baseURL)
     }
 
     // MARK: - WKNavigationDelegate

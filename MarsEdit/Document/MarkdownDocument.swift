@@ -9,7 +9,6 @@ final class MarkdownDocument: ReferenceFileDocument {
     typealias Snapshot = String
 
     @Published var text: String
-    @Published var fileURL: URL?
 
     static var readableContentTypes: [UTType] { [.markdown, .plainText] }
     static var writableContentTypes: [UTType] { [.markdown] }
@@ -53,8 +52,9 @@ final class MarkdownDocument: ReferenceFileDocument {
     }
 
     func readingTime(wpm: Int) -> String {
-        let minutes = max(1, wordCount / max(1, wpm))
-        if minutes < 2 { return "< 1 min" }
+        guard wordCount > 0 else { return "< 1 min" }
+        let effectiveWPM = max(1, wpm)
+        let minutes = (wordCount + effectiveWPM - 1) / effectiveWPM
         return "\(minutes) min"
     }
 

@@ -26,24 +26,11 @@ struct StatusBarView: View {
             // Encoding
             Text("UTF-8")
                 .foregroundStyle(.secondary)
-
-            // Unsaved indicator
-            if hasUnsavedChanges {
-                Circle()
-                    .fill(.orange)
-                    .frame(width: 6, height: 6)
-                    .help("Unsaved changes")
-            }
         }
         .font(.system(size: 11, design: .monospaced))
         .foregroundStyle(.secondary)
         .padding(.horizontal, 12)
         .padding(.vertical, 4)
         .background(.bar)
-    }
-
-    private var hasUnsavedChanges: Bool {
-        // NSDocument tracks this via isDocumentEdited; approximate here
-        !document.text.isEmpty
     }
 }
