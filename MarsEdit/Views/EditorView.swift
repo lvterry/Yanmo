@@ -116,6 +116,8 @@ struct EditorView: NSViewRepresentable {
             let insertionPoint: Int
         }
 
+        private static let syntaxHighlightDebounce: TimeInterval = 0.15
+
         var parent: EditorView
         var textView: MarkdownTextView?
         var scrollView: NSScrollView?
@@ -157,7 +159,7 @@ struct EditorView: NSViewRepresentable {
                 self?.applySyntaxHighlighting()
             }
             highlightWorkItem = work
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15, execute: work)
+            DispatchQueue.main.asyncAfter(deadline: .now() + Self.syntaxHighlightDebounce, execute: work)
         }
 
         func textViewDidChangeSelection(_ notification: Notification) {
@@ -167,7 +169,9 @@ struct EditorView: NSViewRepresentable {
             let lineRange = text.lineRange(for: NSRange(location: selectedRange.location, length: 0))
             let lineNumber = text.substring(to: lineRange.location).components(separatedBy: "\n").count
             let column = selectedRange.location - lineRange.location + 1
-            parent.cursorPosition = (lineNumber, column)
+            DispatchQueue.main.async {
+                self.parent.cursorPosition = (lineNumber, column)
+            }
         }
 
         func applySyntaxHighlighting() {
@@ -355,7 +359,6 @@ class MarkdownTextView: NSTextView {
 
     override func performDragOperation(_ sender: any NSDraggingInfo) -> Bool {
         let pasteboard = sender.draggingPasteboard
-        let supportedTypes: [NSPasteboard.PasteboardType] = [.png, .tiff, .fileURL]
 
         if let fileURLs = pasteboard.readObjects(forClasses: [NSURL.self], options: [
             .urlReadingContentsConformToTypes: ["public.image"]

@@ -8,13 +8,8 @@ struct ContentView: View {
     @State private var viewMode: ViewMode = .split
     @State private var cursorPosition: (line: Int, column: Int) = (1, 1)
     @State private var outlineItems: [OutlineItem] = []
+    private static let toastDuration: TimeInterval = 4.0
     @State private var toastMessage: String?
-    @State private var showFindReplace = false
-    @State private var showReplace = false
-    @State private var dividerPosition: CGFloat = 0.5
-
-    // Find & Replace state (using NSTextView's built-in find bar)
-    @State private var findMatches: Int = 0
 
     var body: some View {
         VStack(spacing: 0) {
@@ -130,7 +125,7 @@ struct ContentView: View {
         withAnimation {
             toastMessage = message
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.toastDuration) {
             withAnimation {
                 toastMessage = nil
             }

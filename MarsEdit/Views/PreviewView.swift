@@ -40,7 +40,7 @@ struct PreviewView: NSViewRepresentable {
             in: MarkdownRenderer.renderHTML(from: document.text),
             relativeTo: baseURL
         )
-        let title = extractTitle(from: document.text)
+        let title = MarkdownRenderer.extractTitle(from: document.text)
         let fullHTML = MarkdownRenderer.fullHTML(body: htmlBody, css: css, title: title)
 
         // Preserve scroll position
@@ -54,22 +54,14 @@ struct PreviewView: NSViewRepresentable {
         }
     }
 
-    private func extractTitle(from markdown: String) -> String {
-        for line in markdown.components(separatedBy: "\n") {
-            let trimmed = line.trimmingCharacters(in: .whitespaces)
-            if trimmed.hasPrefix("# ") {
-                return String(trimmed.dropFirst(2))
-            }
-        }
-        return "Untitled"
-    }
-
     // MARK: - Coordinator
 
     final class Coordinator: NSObject, WKNavigationDelegate {
         var parent: PreviewView
         weak var webView: WKWebView?
         private var updateWorkItem: DispatchWorkItem?
+
+        private static let previewUpdateDebounce: TimeInterval = 0.3
 
         init(_ parent: PreviewView) {
             self.parent = parent
@@ -79,7 +71,7 @@ struct PreviewView: NSViewRepresentable {
             updateWorkItem?.cancel()
             let work = DispatchWorkItem(block: action)
             updateWorkItem = work
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: work)
+            DispatchQueue.main.asyncAfter(deadline: .now() + Self.previewUpdateDebounce, execute: work)
         }
 
         func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
@@ -94,13 +86,5 @@ struct PreviewView: NSViewRepresentable {
             decisionHandler(.allow)
         }
 
-        /// Scrolls the preview to match a percentage offset from the editor.
-        func syncScroll(to percentage: CGFloat) {
-            guard let webView = webView else { return }
-            webView.evaluateJavaScript("""
-                var docHeight = document.documentElement.scrollHeight - window.innerHeight;
-                window.scrollTo(0, docHeight * \(percentage));
-            """)
-        }
     }
 }

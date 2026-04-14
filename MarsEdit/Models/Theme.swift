@@ -24,8 +24,8 @@ struct Theme: Identifiable, Codable, Hashable {
         Theme(id: "github", name: "GitHub", mode: .light, cssFileName: "github.css"),
     ]
 
-    static let defaultLight = builtIn.first { $0.id == "default-light" }!
-    static let defaultDark = builtIn.first { $0.id == "default-dark" }!
+    static let defaultLight = Theme(id: "default-light", name: "Default Light", mode: .light, cssFileName: "default-light.css")
+    static let defaultDark = Theme(id: "default-dark", name: "Default Dark", mode: .dark, cssFileName: "default-dark.css")
 
     static func theme(for id: String) -> Theme? {
         builtIn.first { $0.id == id }

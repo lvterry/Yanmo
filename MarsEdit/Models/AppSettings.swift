@@ -1,5 +1,4 @@
 import SwiftUI
-import Combine
 
 enum AppearanceMode: String, CaseIterable, Codable {
     case system

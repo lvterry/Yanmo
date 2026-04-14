@@ -35,6 +35,17 @@ struct MarkdownRenderer {
         """
     }
 
+    /// Extracts the first H1 heading from markdown text, or returns "Untitled".
+    static func extractTitle(from markdown: String) -> String {
+        for line in markdown.components(separatedBy: "\n") {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.hasPrefix("# ") {
+                return String(trimmed.dropFirst(2))
+            }
+        }
+        return "Untitled"
+    }
+
     static func escapeHTML(_ text: String) -> String {
         text.replacingOccurrences(of: "&", with: "&amp;")
             .replacingOccurrences(of: "<", with: "&lt;")

@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		054CE5EB3122518217B9AB5A /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 395BF64CF82855D86EBF6ADF /* PreferencesView.swift */; };
-		1C9F3A013444148F9391DB69 /* FindReplaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8681E602267D375E6BB19A97 /* FindReplaceView.swift */; };
 		29FB917002D9F0C99E9920F6 /* PDFExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EBCC1AED90F4E9D817849CD /* PDFExporter.swift */; };
 		389E52EB58448E98E2F7B108 /* MarkdownRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E8BD9EC61D10243746D8375 /* MarkdownRenderer.swift */; };
 		39B05F225A3403EA2B5F8EFB /* OutlineItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE1F66ED40FA0CF63619A642 /* OutlineItem.swift */; };
@@ -46,7 +45,6 @@
 		6E4CFD1F4E760E384D7320A0 /* Resources */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Resources; path = MarsEdit/Resources; sourceTree = SOURCE_ROOT; };
 		7E4312776DC33D2DB60D5F74 /* ViewMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewMode.swift; sourceTree = "<group>"; };
 		80AA1CD18CAE69F9F389B729 /* OutlineSidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutlineSidebar.swift; sourceTree = "<group>"; };
-		8681E602267D375E6BB19A97 /* FindReplaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FindReplaceView.swift; sourceTree = "<group>"; };
 		8EBCC1AED90F4E9D817849CD /* PDFExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFExporter.swift; sourceTree = "<group>"; };
 		9E84737812911E50B90BAD07 /* SyntaxHighlighter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntaxHighlighter.swift; sourceTree = "<group>"; };
 		9F5AA75F8D7583B0C4F9EC47 /* StatusBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarView.swift; sourceTree = "<group>"; };
@@ -150,7 +148,6 @@
 			children = (
 				3797CA074DCFEDA92620494F /* ContentView.swift */,
 				0BBABC595D4CDD5A500EAC60 /* EditorView.swift */,
-				8681E602267D375E6BB19A97 /* FindReplaceView.swift */,
 				80AA1CD18CAE69F9F389B729 /* OutlineSidebar.swift */,
 				3987A695942E6DBB85EF8C88 /* PreviewView.swift */,
 				9F5AA75F8D7583B0C4F9EC47 /* StatusBarView.swift */,
@@ -199,9 +196,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1430;
-				TargetAttributes = {
-				};
+				LastUpgradeCheck = 2610;
 			};
 			buildConfigurationList = C3010DCB937E76AF1A766BF1 /* Build configuration list for PBXProject "MarsEdit" */;
 			developmentRegion = en;
@@ -244,7 +239,6 @@
 				8FCCDA2AEF867CE33430E2AB /* AppSettings.swift in Sources */,
 				63E14B19C7B2A071E738F8D9 /* ContentView.swift in Sources */,
 				D2F950B026B5841AB9850CBE /* EditorView.swift in Sources */,
-				1C9F3A013444148F9391DB69 /* FindReplaceView.swift in Sources */,
 				AE8524BA70118DEF47401A8E /* HTMLExporter.swift in Sources */,
 				46E4D7D66E4F2B5B92D1F3A1 /* LocalAssetSchemeHandler.swift in Sources */,
 				FF3979BCF2255A97C2B869AD /* MarkdownDocument.swift in Sources */,
@@ -300,9 +294,11 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -316,6 +312,7 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
@@ -356,9 +353,11 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -379,6 +378,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -391,8 +391,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = MarsEdit/MarsEdit.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
+				"DEVELOPMENT_TEAM[sdk=macosx*]" = RRSXL9JZ27;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = MarsEdit/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -410,8 +413,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = MarsEdit/MarsEdit.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
+				"DEVELOPMENT_TEAM[sdk=macosx*]" = RRSXL9JZ27;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = MarsEdit/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
