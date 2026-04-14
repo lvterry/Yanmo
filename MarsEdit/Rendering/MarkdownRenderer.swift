@@ -2,6 +2,8 @@ import Foundation
 import Markdown
 
 struct MarkdownRenderer {
+    static let localAssetScheme = "marsedit-asset"
+
     /// Converts Markdown source text to an HTML string using swift-markdown (GFM).
     static func renderHTML(from markdown: String) -> String {
         let document = Document(parsing: markdown, options: [.parseBlockDirectives])
@@ -10,14 +12,17 @@ struct MarkdownRenderer {
     }
 
     /// Wraps rendered HTML body with a full HTML document including theme CSS.
-    static func fullHTML(body: String, css: String, title: String = "") -> String {
+    static let assetCSPPolicy = "https: http: marsedit-asset:"
+    static let exportCSPPolicy = "https: http: file:"
+
+    static func fullHTML(body: String, css: String, title: String = "", cspImageSources: String = assetCSPPolicy) -> String {
         """
         <!DOCTYPE html>
         <html>
         <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src * data:; font-src *;">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src \(cspImageSources); font-src *;">
         <title>\(escapeHTML(title))</title>
         <style>
         \(css)
@@ -53,6 +58,69 @@ struct MarkdownRenderer {
         }
 
         return escapeHTML(trimmed)
+    }
+
+    static func resolveLocalImageSources(in html: String, relativeTo baseURL: URL?, useAssetScheme: Bool = true) -> String {
+        guard let baseURL else { return html }
+
+        let pattern = #"(<img\b[^>]*\bsrc=")([^"]+)(")"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
+            return html
+        }
+
+        let nsHTML = html as NSString
+        let matches = regex.matches(in: html, options: [], range: NSRange(location: 0, length: nsHTML.length))
+        guard !matches.isEmpty else { return html }
+
+        var resolvedHTML = html
+        for match in matches.reversed() {
+            guard match.numberOfRanges == 4 else { continue }
+            let srcRange = match.range(at: 2)
+            let escapedSource = nsHTML.substring(with: srcRange)
+            let source = escapedSource
+                .replacingOccurrences(of: "&quot;", with: "\"")
+                .replacingOccurrences(of: "&amp;", with: "&")
+
+            guard shouldResolveAsLocalPath(source),
+                  let absoluteURL = resolvedLocalFileURL(for: source, relativeTo: baseURL) else {
+                continue
+            }
+
+            let resolved: URL = useAssetScheme ? localAssetURL(for: absoluteURL) : absoluteURL
+            let replacement = escapeHTML(resolved.absoluteString)
+            let stringRange = Range(srcRange, in: resolvedHTML)!
+            resolvedHTML.replaceSubrange(stringRange, with: replacement)
+        }
+
+        return resolvedHTML
+    }
+
+    private static func shouldResolveAsLocalPath(_ source: String) -> Bool {
+        if source.isEmpty || source.hasPrefix("#") || source.hasPrefix("/") {
+            return false
+        }
+
+        if let url = URL(string: source), let scheme = url.scheme?.lowercased(), !scheme.isEmpty {
+            return scheme == "file"
+        }
+
+        return true
+    }
+
+    private static func resolvedLocalFileURL(for source: String, relativeTo baseURL: URL) -> URL? {
+        if let url = URL(string: source), let scheme = url.scheme?.lowercased(), scheme == "file" {
+            return url.standardizedFileURL
+        }
+
+        return baseURL.appendingPathComponent(source).standardizedFileURL
+    }
+
+    static func localAssetURL(for fileURL: URL) -> URL {
+        var components = URLComponents()
+        components.scheme = localAssetScheme
+        components.host = "local"
+        components.path = fileURL.path
+        return components.url ?? fileURL
     }
 }
 

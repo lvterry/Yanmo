@@ -82,8 +82,10 @@ final class PDFExporter: NSObject, WKNavigationDelegate {
             of: "</style>",
             with: "\n\(printCSS)\n</style>"
         )
+        let resolvedHTML = MarkdownRenderer.resolveLocalImageSources(in: augmentedHTML, relativeTo: baseURL)
 
         let config = WKWebViewConfiguration()
+        config.setURLSchemeHandler(LocalAssetSchemeHandler.shared, forURLScheme: MarkdownRenderer.localAssetScheme)
         let webView = WKWebView(
             frame: NSRect(x: 0, y: 0, width: contentWidth, height: pageDimensions.height),
             configuration: config
@@ -106,7 +108,7 @@ final class PDFExporter: NSObject, WKNavigationDelegate {
         window.orderBack(nil)
         self.offscreenWindow = window
 
-        webView.loadHTMLString(augmentedHTML, baseURL: baseURL)
+        webView.loadHTMLString(resolvedHTML, baseURL: baseURL)
     }
 
     // MARK: - WKNavigationDelegate

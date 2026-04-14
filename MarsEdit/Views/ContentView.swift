@@ -38,6 +38,7 @@ struct ContentView: View {
                         if viewMode != .previewOnly {
                             EditorView(
                                 document: document,
+                                fileURL: fileURL,
                                 cursorPosition: $cursorPosition
                             )
                             .frame(minWidth: 200)
@@ -141,7 +142,7 @@ struct ContentView: View {
     private func exportHTML() {
         let theme = settings.currentTheme
         let exporter = HTMLExporter(theme: theme)
-        let html = exporter.export(markdown: document.text)
+        let html = exporter.exportForBrowser(markdown: document.text, documentDirectory: fileURL?.deletingLastPathComponent())
 
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.html]

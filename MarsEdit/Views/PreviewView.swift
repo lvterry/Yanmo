@@ -15,6 +15,7 @@ struct PreviewView: NSViewRepresentable {
     func makeNSView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
         config.preferences.setValue(true, forKey: "developerExtrasEnabled")
+        config.setURLSchemeHandler(LocalAssetSchemeHandler.shared, forURLScheme: MarkdownRenderer.localAssetScheme)
 
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = context.coordinator
@@ -35,7 +36,10 @@ struct PreviewView: NSViewRepresentable {
     private func loadPreview(webView: WKWebView) {
         let theme = settings.currentTheme
         let css = theme.loadCSS()
-        let htmlBody = MarkdownRenderer.renderHTML(from: document.text)
+        let htmlBody = MarkdownRenderer.resolveLocalImageSources(
+            in: MarkdownRenderer.renderHTML(from: document.text),
+            relativeTo: baseURL
+        )
         let title = extractTitle(from: document.text)
         let fullHTML = MarkdownRenderer.fullHTML(body: htmlBody, css: css, title: title)
 

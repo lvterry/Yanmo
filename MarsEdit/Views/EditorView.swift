@@ -4,6 +4,7 @@ import AppKit
 /// Wraps NSTextView in NSViewRepresentable for the Markdown source editor.
 struct EditorView: NSViewRepresentable {
     @ObservedObject var document: MarkdownDocument
+    let fileURL: URL?
     @EnvironmentObject var settings: AppSettings
 
     @Binding var cursorPosition: (line: Int, column: Int)
@@ -76,6 +77,7 @@ struct EditorView: NSViewRepresentable {
 
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         guard let textView = scrollView.documentView as? MarkdownTextView else { return }
+        context.coordinator.parent = self
 
         if textView.string != document.text && !context.coordinator.isUpdating {
             context.coordinator.isUpdating = true
@@ -97,6 +99,7 @@ struct EditorView: NSViewRepresentable {
         }
 
         context.coordinator.applySyntaxHighlighting()
+        context.coordinator.handleFileURLChange()
     }
 
     private func applyTheme(textView: NSTextView) {
@@ -108,12 +111,20 @@ struct EditorView: NSViewRepresentable {
     // MARK: - Coordinator
 
     final class Coordinator: NSObject, NSTextViewDelegate {
+        struct PendingImageInsert {
+            let image: NSImage
+            let insertionPoint: Int
+        }
+
         var parent: EditorView
         var textView: MarkdownTextView?
         var scrollView: NSScrollView?
         var isUpdating = false
         var formatObserver: Any?
         var scrollObserver: Any?
+        var saveSheetObserver: Any?
+        var pendingImageInsert: PendingImageInsert?
+        var isWaitingForSave = false
         private var highlightWorkItem: DispatchWorkItem?
 
         init(_ parent: EditorView) {
@@ -123,6 +134,15 @@ struct EditorView: NSViewRepresentable {
         deinit {
             if let obs = formatObserver { NotificationCenter.default.removeObserver(obs) }
             if let obs = scrollObserver { NotificationCenter.default.removeObserver(obs) }
+            if let obs = saveSheetObserver { NotificationCenter.default.removeObserver(obs) }
+        }
+
+        func handleFileURLChange() {
+            guard let pending = pendingImageInsert, let fileURL = parent.fileURL else { return }
+            insertLinkedImage(pending.image, at: pending.insertionPoint, fileURL: fileURL)
+            pendingImageInsert = nil
+            isWaitingForSave = false
+            removeSaveSheetObserver()
         }
 
         func textDidChange(_ notification: Notification) {
@@ -177,6 +197,70 @@ struct EditorView: NSViewRepresentable {
 
             textView.insertText(replacement, replacementRange: selectedRange)
         }
+
+        private func beginSaveForPendingImage() {
+            guard !isWaitingForSave else { return }
+            isWaitingForSave = true
+            installSaveSheetObserver()
+
+            let didSend = NSApp.sendAction(#selector(NSDocument.save(_:)), to: nil, from: nil)
+            if !didSend {
+                pendingImageInsert = nil
+                isWaitingForSave = false
+                removeSaveSheetObserver()
+                postToast("Unable to save the document before inserting the image.")
+            }
+        }
+
+        private func installSaveSheetObserver() {
+            guard saveSheetObserver == nil, let window = textView?.window else { return }
+            saveSheetObserver = NotificationCenter.default.addObserver(
+                forName: NSWindow.didEndSheetNotification,
+                object: window,
+                queue: .main
+            ) { [weak self] _ in
+                guard let self else { return }
+                self.resolvePendingSaveOutcome(attemptsRemaining: 15)
+            }
+        }
+
+        private func resolvePendingSaveOutcome(attemptsRemaining: Int) {
+            guard isWaitingForSave else { return }
+            if parent.fileURL != nil { return }
+            guard attemptsRemaining > 0 else {
+                pendingImageInsert = nil
+                isWaitingForSave = false
+                removeSaveSheetObserver()
+                postToast("Save the document to insert images as linked files.")
+                return
+            }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+                self?.resolvePendingSaveOutcome(attemptsRemaining: attemptsRemaining - 1)
+            }
+        }
+
+        private func removeSaveSheetObserver() {
+            if let observer = saveSheetObserver {
+                NotificationCenter.default.removeObserver(observer)
+                saveSheetObserver = nil
+            }
+        }
+
+        private func insertLinkedImage(_ image: NSImage, at location: Int, fileURL: URL) {
+            do {
+                let relativePath = try LinkedImageWriter.write(image: image, nextTo: fileURL)
+                let markdown = "![](\(relativePath))"
+                let insertionLocation = min(location, textView?.string.utf16.count ?? location)
+                textView?.insertText(markdown, replacementRange: NSRange(location: insertionLocation, length: 0))
+            } catch {
+                postToast(error.localizedDescription)
+            }
+        }
+
+        private func postToast(_ message: String) {
+            NotificationCenter.default.post(name: .showToast, object: message)
+        }
     }
 }
 
@@ -189,35 +273,59 @@ protocol ImageDropDelegate: AnyObject {
 
 extension EditorView.Coordinator: ImageDropDelegate {
     func handleImageDrop(_ image: NSImage, at insertionPoint: Int) {
-        insertBase64Image(image, at: insertionPoint)
+        queueLinkedImageInsert(image, at: insertionPoint)
     }
 
     func handleImagePaste(_ image: NSImage) {
         guard let textView = textView else { return }
-        insertBase64Image(image, at: textView.selectedRange().location)
+        queueLinkedImageInsert(image, at: textView.selectedRange().location)
     }
 
-    private func insertBase64Image(_ image: NSImage, at location: Int) {
-        guard let textView = textView,
-              let tiffData = image.tiffRepresentation,
-              let bitmap = NSBitmapImageRep(data: tiffData),
-              let pngData = bitmap.representation(using: .png, properties: [:]) else { return }
-
-        let base64 = pngData.base64EncodedString()
-        let markdown = "![](data:image/png;base64,\(base64))"
-
-        // Warn if large
-        if pngData.count > 500_000 {
-            let sizeStr = String(format: "%.1f MB", Double(pngData.count) / 1_000_000)
-            DispatchQueue.main.async {
-                NotificationCenter.default.post(
-                    name: .showToast,
-                    object: "Image is large (\(sizeStr)). Consider linking to an external file instead."
-                )
-            }
+    private func queueLinkedImageInsert(_ image: NSImage, at location: Int) {
+        if let fileURL = parent.fileURL {
+            insertLinkedImage(image, at: location, fileURL: fileURL)
+            return
         }
 
-        textView.insertText(markdown, replacementRange: NSRange(location: location, length: 0))
+        pendingImageInsert = PendingImageInsert(image: image, insertionPoint: location)
+        beginSaveForPendingImage()
+    }
+}
+
+private enum LinkedImageWriter {
+    static func write(image: NSImage, nextTo fileURL: URL) throws -> String {
+        guard let tiffData = image.tiffRepresentation,
+              let bitmap = NSBitmapImageRep(data: tiffData),
+              let pngData = bitmap.representation(using: .png, properties: [:]) else {
+            throw ImageWriteError.encodingFailed
+        }
+
+        let documentDirectory = fileURL.deletingLastPathComponent()
+        let assetsDirectory = documentDirectory.appendingPathComponent("Assets", isDirectory: true)
+        try FileManager.default.createDirectory(at: assetsDirectory, withIntermediateDirectories: true)
+
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyyMMdd-HHmmss"
+        let timestamp = formatter.string(from: Date())
+        let suffix = UUID().uuidString.prefix(4).lowercased()
+        let filename = "image-\(timestamp)-\(suffix).png"
+
+        let fileOnDisk = assetsDirectory.appendingPathComponent(filename)
+        try pngData.write(to: fileOnDisk, options: .atomic)
+
+        return "Assets/\(filename)"
+    }
+}
+
+private enum ImageWriteError: LocalizedError {
+    case encodingFailed
+
+    var errorDescription: String? {
+        switch self {
+        case .encodingFailed:
+            return "Unable to encode the image for insertion."
+        }
     }
 }
 

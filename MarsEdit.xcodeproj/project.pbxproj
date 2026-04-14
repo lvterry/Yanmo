@@ -14,6 +14,7 @@
 		39B05F225A3403EA2B5F8EFB /* OutlineItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE1F66ED40FA0CF63619A642 /* OutlineItem.swift */; };
 		3A5A19B1EA2BD997365270FF /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC25AE91581B786D203B1242 /* Theme.swift */; };
 		42560957492ED12073514BFC /* SyntaxHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E84737812911E50B90BAD07 /* SyntaxHighlighter.swift */; };
+		46E4D7D66E4F2B5B92D1F3A1 /* LocalAssetSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46E4D7D56E4F2B5B92D1F3A1 /* LocalAssetSchemeHandler.swift */; };
 		572BBA9351AD740394798F4C /* OutlineSidebar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80AA1CD18CAE69F9F389B729 /* OutlineSidebar.swift */; };
 		63E14B19C7B2A071E738F8D9 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3797CA074DCFEDA92620494F /* ContentView.swift */; };
 		85330739355F9C463E4CD075 /* StatusBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F5AA75F8D7583B0C4F9EC47 /* StatusBarView.swift */; };
@@ -40,6 +41,7 @@
 		38D0B910556CD1F896CE0C9B /* MarsEditApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarsEditApp.swift; sourceTree = "<group>"; };
 		395BF64CF82855D86EBF6ADF /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
 		3987A695942E6DBB85EF8C88 /* PreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewView.swift; sourceTree = "<group>"; };
+		46E4D7D56E4F2B5B92D1F3A1 /* LocalAssetSchemeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalAssetSchemeHandler.swift; sourceTree = "<group>"; };
 		5A6C29EF814D1782BFA80831 /* MarsEdit.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MarsEdit.entitlements; sourceTree = "<group>"; };
 		6E4CFD1F4E760E384D7320A0 /* Resources */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Resources; path = MarsEdit/Resources; sourceTree = SOURCE_ROOT; };
 		7E4312776DC33D2DB60D5F74 /* ViewMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewMode.swift; sourceTree = "<group>"; };
@@ -160,6 +162,7 @@
 		E7E09D1A633DF43459952C75 /* Rendering */ = {
 			isa = PBXGroup;
 			children = (
+				46E4D7D56E4F2B5B92D1F3A1 /* LocalAssetSchemeHandler.swift */,
 				1E8BD9EC61D10243746D8375 /* MarkdownRenderer.swift */,
 				9E84737812911E50B90BAD07 /* SyntaxHighlighter.swift */,
 			);
@@ -243,6 +246,7 @@
 				D2F950B026B5841AB9850CBE /* EditorView.swift in Sources */,
 				1C9F3A013444148F9391DB69 /* FindReplaceView.swift in Sources */,
 				AE8524BA70118DEF47401A8E /* HTMLExporter.swift in Sources */,
+				46E4D7D66E4F2B5B92D1F3A1 /* LocalAssetSchemeHandler.swift in Sources */,
 				FF3979BCF2255A97C2B869AD /* MarkdownDocument.swift in Sources */,
 				389E52EB58448E98E2F7B108 /* MarkdownRenderer.swift in Sources */,
 				A26DA0986A8ED17D4499DAB6 /* MarsEditApp.swift in Sources */,
