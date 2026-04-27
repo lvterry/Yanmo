@@ -117,8 +117,17 @@ struct EditorView: NSViewRepresentable {
 
     private func applyTheme(textView: NSTextView) {
         let theme = settings.currentTheme
+        let font = settings.editorFont
         textView.backgroundColor = theme.editorBackground
         textView.insertionPointColor = theme.editorTextColor
+        // Seed font + typing attributes so newly typed characters render in the
+        // editor font immediately, instead of waiting for the debounced syntax
+        // pass to overwrite system-default attributes.
+        textView.font = font
+        textView.typingAttributes = [
+            .font: font,
+            .foregroundColor: theme.editorTextColor,
+        ]
     }
 
     // MARK: - Coordinator
