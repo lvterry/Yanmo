@@ -20,6 +20,7 @@ struct SyntaxHighlighter {
     private static let blockquoteRegex   = try! NSRegularExpression(pattern: "^>\\s?.*$", options: .anchorsMatchLines)
     private static let horizontalRuleRegex = try! NSRegularExpression(pattern: "^(---+|\\*\\*\\*+|___+)\\s*$", options: .anchorsMatchLines)
     private static let listMarkerRegex   = try! NSRegularExpression(pattern: "^\\s*([-*+]|\\d+\\.)\\s", options: .anchorsMatchLines)
+    private static let frontMatterDelimiterLineRegex = try! NSRegularExpression(pattern: "^(---|\\.\\.\\.)\\s*$", options: .anchorsMatchLines)
 
     /// Highlight the storage. If `editedRange` is non-nil, only re-highlight a
     /// region around that range; otherwise re-highlight the whole document.
@@ -28,10 +29,26 @@ struct SyntaxHighlighter {
         let fullLength = textStorage.length
         let fullRange = NSRange(location: 0, length: fullLength)
 
-        let target: NSRange = {
+        let frontMatterRange = Self.frontMatterNSRange(in: text)
+
+        var target: NSRange = {
             guard let edited = editedRange else { return fullRange }
             return Self.expandedRange(for: edited, in: text, fullLength: fullLength)
         }()
+
+        // Front matter is anchored to offset 0; if an edit lands inside (or
+        // could plausibly affect) it, expand the highlight target to cover
+        // the whole front-matter region from offset 0.
+        if let fmRange = frontMatterRange,
+           target.location < fmRange.location + fmRange.length + 1 {
+            let newEnd = max(target.location + target.length, fmRange.location + fmRange.length)
+            target = NSRange(location: 0, length: newEnd)
+        } else if let edited = editedRange,
+                  edited.location < 2048,
+                  Self.startsWithFrontMatterOpening(text) {
+            let targetEnd = target.location + target.length
+            target = NSRange(location: 0, length: targetEnd)
+        }
 
         // Reset to base style across the target range
         let baseAttributes: [NSAttributedString.Key: Any] = [
@@ -40,17 +57,62 @@ struct SyntaxHighlighter {
         ]
         textStorage.setAttributes(baseAttributes, range: target)
 
-        highlightHeadings(textStorage, text: text, range: target)
-        highlightBold(textStorage, text: text, range: target)
-        highlightItalic(textStorage, text: text, range: target)
-        highlightStrikethrough(textStorage, text: text, range: target)
-        highlightInlineCode(textStorage, text: text, range: target)
-        highlightCodeBlocks(textStorage, text: text, range: target)
-        highlightLinks(textStorage, text: text, range: target)
-        highlightImages(textStorage, text: text, range: target)
-        highlightBlockquotes(textStorage, text: text, range: target)
-        highlightHorizontalRules(textStorage, text: text, range: target)
-        highlightListMarkers(textStorage, text: text, range: target)
+        highlightFrontMatter(textStorage, range: target, frontMatter: frontMatterRange)
+        highlightHeadings(textStorage, text: text, range: target, skipping: frontMatterRange)
+        highlightBold(textStorage, text: text, range: target, skipping: frontMatterRange)
+        highlightItalic(textStorage, text: text, range: target, skipping: frontMatterRange)
+        highlightStrikethrough(textStorage, text: text, range: target, skipping: frontMatterRange)
+        highlightInlineCode(textStorage, text: text, range: target, skipping: frontMatterRange)
+        highlightCodeBlocks(textStorage, text: text, range: target, skipping: frontMatterRange)
+        highlightLinks(textStorage, text: text, range: target, skipping: frontMatterRange)
+        highlightImages(textStorage, text: text, range: target, skipping: frontMatterRange)
+        highlightBlockquotes(textStorage, text: text, range: target, skipping: frontMatterRange)
+        highlightHorizontalRules(textStorage, text: text, range: target, skipping: frontMatterRange)
+        highlightListMarkers(textStorage, text: text, range: target, skipping: frontMatterRange)
+    }
+
+    // MARK: - Front Matter
+
+    private static func frontMatterNSRange(in text: String) -> NSRange? {
+        guard let fm = FrontMatter.parse(text) else { return nil }
+        return NSRange(fm.range, in: text)
+    }
+
+    private static func startsWithFrontMatterOpening(_ text: String) -> Bool {
+        guard !text.isEmpty else { return false }
+        let nsText = text as NSString
+        let firstLineRange = nsText.lineRange(for: NSRange(location: 0, length: 0))
+        let firstLine = nsText.substring(with: firstLineRange)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return firstLine == "---"
+    }
+
+    private func highlightFrontMatter(_ storage: NSTextStorage, range: NSRange, frontMatter: NSRange?) {
+        guard let fm = frontMatter else { return }
+        let intersection = NSIntersectionRange(range, fm)
+        guard intersection.length > 0 else { return }
+
+        let monoFont = NSFont.monospacedSystemFont(ofSize: font.pointSize - 1, weight: .regular)
+        storage.addAttributes([
+            .font: monoFont,
+            .foregroundColor: NSColor.secondaryLabelColor,
+            .backgroundColor: theme.editorCodeBackground,
+        ], range: intersection)
+
+        // Slightly emphasize the delimiter lines.
+        let text = storage.string
+        let boldMono = NSFont.monospacedSystemFont(ofSize: font.pointSize - 1, weight: .semibold)
+        for match in Self.frontMatterDelimiterLineRegex.matches(in: text, range: fm) {
+            let delimRange = NSIntersectionRange(match.range, intersection)
+            if delimRange.length > 0 {
+                storage.addAttribute(.font, value: boldMono, range: delimRange)
+            }
+        }
+    }
+
+    private static func skip(_ matchRange: NSRange, frontMatter: NSRange?) -> Bool {
+        guard let fm = frontMatter else { return false }
+        return NSIntersectionRange(matchRange, fm).length > 0
     }
 
     // MARK: - Range expansion
@@ -93,7 +155,7 @@ struct SyntaxHighlighter {
             }
         }
 
-        var range = NSRange(location: start, length: end - start)
+        let range = NSRange(location: start, length: end - start)
 
         // Fenced code blocks span paragraphs. If any fence pair intersects the expanded
         // range — or if the edit point sits inside one — fall back to a full re-highlight.
@@ -115,8 +177,9 @@ struct SyntaxHighlighter {
 
     // MARK: - Headings
 
-    private func highlightHeadings(_ storage: NSTextStorage, text: String, range: NSRange) {
+    private func highlightHeadings(_ storage: NSTextStorage, text: String, range: NSRange, skipping frontMatter: NSRange?) {
         for match in Self.headingRegex.matches(in: text, range: range) {
+            if Self.skip(match.range, frontMatter: frontMatter) { continue }
             let level = match.range(at: 1).length
             let fontSize = max(font.pointSize, font.pointSize + CGFloat(4 - level) * 2)
             let headingFont = NSFontManager.shared.convert(font, toSize: fontSize)
@@ -130,8 +193,8 @@ struct SyntaxHighlighter {
 
     // MARK: - Bold
 
-    private func highlightBold(_ storage: NSTextStorage, text: String, range: NSRange) {
-        applyInlineStyle(storage, text: text, regex: Self.boldRegex, range: range) { matchRange in
+    private func highlightBold(_ storage: NSTextStorage, text: String, range: NSRange, skipping frontMatter: NSRange?) {
+        applyInlineStyle(storage, text: text, regex: Self.boldRegex, range: range, skipping: frontMatter) { matchRange in
             let boldFont = NSFontManager.shared.convert(font, toHaveTrait: .boldFontMask)
             storage.addAttribute(.font, value: boldFont, range: matchRange)
         }
@@ -139,8 +202,8 @@ struct SyntaxHighlighter {
 
     // MARK: - Italic
 
-    private func highlightItalic(_ storage: NSTextStorage, text: String, range: NSRange) {
-        applyInlineStyle(storage, text: text, regex: Self.italicRegex, range: range) { matchRange in
+    private func highlightItalic(_ storage: NSTextStorage, text: String, range: NSRange, skipping frontMatter: NSRange?) {
+        applyInlineStyle(storage, text: text, regex: Self.italicRegex, range: range, skipping: frontMatter) { matchRange in
             let italicFont = NSFontManager.shared.convert(font, toHaveTrait: .italicFontMask)
             storage.addAttribute(.font, value: italicFont, range: matchRange)
         }
@@ -148,8 +211,8 @@ struct SyntaxHighlighter {
 
     // MARK: - Strikethrough
 
-    private func highlightStrikethrough(_ storage: NSTextStorage, text: String, range: NSRange) {
-        applyInlineStyle(storage, text: text, regex: Self.strikethroughRegex, range: range) { matchRange in
+    private func highlightStrikethrough(_ storage: NSTextStorage, text: String, range: NSRange, skipping frontMatter: NSRange?) {
+        applyInlineStyle(storage, text: text, regex: Self.strikethroughRegex, range: range, skipping: frontMatter) { matchRange in
             storage.addAttribute(.strikethroughStyle, value: NSUnderlineStyle.single.rawValue, range: matchRange)
             storage.addAttribute(.foregroundColor, value: NSColor.secondaryLabelColor, range: matchRange)
         }
@@ -157,8 +220,8 @@ struct SyntaxHighlighter {
 
     // MARK: - Inline Code
 
-    private func highlightInlineCode(_ storage: NSTextStorage, text: String, range: NSRange) {
-        applyInlineStyle(storage, text: text, regex: Self.inlineCodeRegex, range: range) { matchRange in
+    private func highlightInlineCode(_ storage: NSTextStorage, text: String, range: NSRange, skipping frontMatter: NSRange?) {
+        applyInlineStyle(storage, text: text, regex: Self.inlineCodeRegex, range: range, skipping: frontMatter) { matchRange in
             let monoFont = NSFont.monospacedSystemFont(ofSize: font.pointSize - 1, weight: .regular)
             storage.addAttributes([
                 .font: monoFont,
@@ -169,8 +232,9 @@ struct SyntaxHighlighter {
 
     // MARK: - Code Blocks
 
-    private func highlightCodeBlocks(_ storage: NSTextStorage, text: String, range: NSRange) {
+    private func highlightCodeBlocks(_ storage: NSTextStorage, text: String, range: NSRange, skipping frontMatter: NSRange?) {
         for match in Self.codeBlockRegex.matches(in: text, range: range) {
+            if Self.skip(match.range, frontMatter: frontMatter) { continue }
             let monoFont = NSFont.monospacedSystemFont(ofSize: font.pointSize - 1, weight: .regular)
             storage.addAttributes([
                 .font: monoFont,
@@ -182,8 +246,9 @@ struct SyntaxHighlighter {
 
     // MARK: - Links
 
-    private func highlightLinks(_ storage: NSTextStorage, text: String, range: NSRange) {
+    private func highlightLinks(_ storage: NSTextStorage, text: String, range: NSRange, skipping frontMatter: NSRange?) {
         for match in Self.linkRegex.matches(in: text, range: range) {
+            if Self.skip(match.range, frontMatter: frontMatter) { continue }
             storage.addAttribute(.foregroundColor, value: theme.editorLinkColor, range: match.range)
             if match.numberOfRanges > 1 {
                 storage.addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: match.range(at: 1))
@@ -193,8 +258,9 @@ struct SyntaxHighlighter {
 
     // MARK: - Images
 
-    private func highlightImages(_ storage: NSTextStorage, text: String, range: NSRange) {
+    private func highlightImages(_ storage: NSTextStorage, text: String, range: NSRange, skipping frontMatter: NSRange?) {
         for match in Self.imageRegex.matches(in: text, range: range) {
+            if Self.skip(match.range, frontMatter: frontMatter) { continue }
             storage.addAttribute(.foregroundColor, value: theme.editorLinkColor, range: match.range)
         }
 
@@ -246,32 +312,43 @@ struct SyntaxHighlighter {
 
     // MARK: - Blockquotes
 
-    private func highlightBlockquotes(_ storage: NSTextStorage, text: String, range: NSRange) {
+    private func highlightBlockquotes(_ storage: NSTextStorage, text: String, range: NSRange, skipping frontMatter: NSRange?) {
         for match in Self.blockquoteRegex.matches(in: text, range: range) {
+            if Self.skip(match.range, frontMatter: frontMatter) { continue }
             storage.addAttribute(.foregroundColor, value: NSColor.secondaryLabelColor, range: match.range)
         }
     }
 
     // MARK: - Horizontal Rules
 
-    private func highlightHorizontalRules(_ storage: NSTextStorage, text: String, range: NSRange) {
+    private func highlightHorizontalRules(_ storage: NSTextStorage, text: String, range: NSRange, skipping frontMatter: NSRange?) {
         for match in Self.horizontalRuleRegex.matches(in: text, range: range) {
+            if Self.skip(match.range, frontMatter: frontMatter) { continue }
             storage.addAttribute(.foregroundColor, value: NSColor.separatorColor, range: match.range)
         }
     }
 
     // MARK: - List Markers
 
-    private func highlightListMarkers(_ storage: NSTextStorage, text: String, range: NSRange) {
+    private func highlightListMarkers(_ storage: NSTextStorage, text: String, range: NSRange, skipping frontMatter: NSRange?) {
         for match in Self.listMarkerRegex.matches(in: text, range: range) {
+            if Self.skip(match.range, frontMatter: frontMatter) { continue }
             storage.addAttribute(.foregroundColor, value: theme.editorLinkColor, range: match.range)
         }
     }
 
     // MARK: - Helpers
 
-    private func applyInlineStyle(_ storage: NSTextStorage, text: String, regex: NSRegularExpression, range: NSRange, apply: (NSRange) -> Void) {
+    private func applyInlineStyle(
+        _ storage: NSTextStorage,
+        text: String,
+        regex: NSRegularExpression,
+        range: NSRange,
+        skipping frontMatter: NSRange?,
+        apply: (NSRange) -> Void
+    ) {
         for match in regex.matches(in: text, range: range) {
+            if Self.skip(match.range, frontMatter: frontMatter) { continue }
             apply(match.range)
         }
     }

@@ -6,9 +6,33 @@ struct MarkdownRenderer {
 
     /// Converts Markdown source text to an HTML string using swift-markdown (GFM).
     static func renderHTML(from markdown: String) -> String {
-        let document = Document(parsing: markdown, options: [.parseBlockDirectives])
+        let frontMatterHTML: String
+        let body: String
+        if let fm = FrontMatter.parse(markdown) {
+            frontMatterHTML = renderFrontMatterTable(fm)
+            body = String(markdown[fm.range.upperBound...])
+        } else {
+            frontMatterHTML = ""
+            body = markdown
+        }
+        let document = Document(parsing: body, options: [.parseBlockDirectives])
         var visitor = HTMLVisitor()
-        return visitor.visit(document)
+        let bodyHTML = visitor.visit(document)
+        if frontMatterHTML.isEmpty { return bodyHTML }
+        return frontMatterHTML + "\n" + bodyHTML
+    }
+
+    private static func renderFrontMatterTable(_ fm: FrontMatter) -> String {
+        guard !fm.entries.isEmpty else { return "" }
+        var rows = ""
+        for entry in fm.entries {
+            if let key = entry.key {
+                rows += "<tr><th>\(escapeHTML(key))</th><td>\(escapeHTML(entry.value))</td></tr>\n"
+            } else {
+                rows += "<tr><td colspan=\"2\"><code>\(escapeHTML(entry.value))</code></td></tr>\n"
+            }
+        }
+        return "<table class=\"front-matter\">\n<tbody>\n\(rows)</tbody>\n</table>"
     }
 
     /// Wraps rendered HTML body with a full HTML document including theme CSS.
@@ -36,8 +60,14 @@ struct MarkdownRenderer {
     }
 
     /// Extracts the first H1 heading from markdown text, or returns "Untitled".
+    /// A `title:` entry in front matter takes precedence.
     static func extractTitle(from markdown: String) -> String {
-        for line in markdown.components(separatedBy: "\n") {
+        if let fm = FrontMatter.parse(markdown),
+           let title = fm.value(for: "title"), !title.isEmpty {
+            return title
+        }
+        let body = FrontMatter.stripping(markdown)
+        for line in body.components(separatedBy: "\n") {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
             if trimmed.hasPrefix("# ") {
                 return String(trimmed.dropFirst(2))

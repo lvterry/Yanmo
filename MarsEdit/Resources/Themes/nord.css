@@ -133,6 +133,33 @@ tr:nth-child(even) {
     background-color: #353b49;
 }
 
+.front-matter {
+    width: 100%;
+    margin-bottom: 24px;
+    font-size: 0.85em;
+    color: #7b88a1;
+    border: 1px solid #3b4252;
+    border-radius: 6px;
+    border-collapse: collapse;
+    display: table;
+}
+
+.front-matter th {
+    text-align: left;
+    width: 1%;
+    white-space: nowrap;
+    font-weight: 600;
+    background: none;
+    border: none;
+    padding: 4px 12px 4px 12px;
+}
+
+.front-matter td {
+    border: none;
+    padding: 4px 12px;
+    font-family: 'SF Mono', Menlo, monospace;
+}
+
 /* Images */
 img {
     max-width: 100%;

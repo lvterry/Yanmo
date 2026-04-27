@@ -43,7 +43,7 @@ struct Theme: Identifiable, Codable, Hashable {
         ]
 
         for case let url? in lookups {
-            if let css = try? String(contentsOf: url) {
+            if let css = try? String(contentsOf: url, encoding: .utf8) {
                 return css
             }
         }
@@ -152,6 +152,30 @@ struct Theme: Identifiable, Codable, Hashable {
         }
         tr { background-color: \(bg); }
         tr:nth-child(2n) { background-color: \(stripeBg); }
+        .front-matter {
+            width: 100%;
+            margin-bottom: 24px;
+            font-size: 0.85em;
+            color: \(fgSecondary);
+            border: 1px solid \(border);
+            border-radius: 6px;
+            border-collapse: collapse;
+            display: table;
+        }
+        .front-matter th {
+            text-align: left;
+            width: 1%;
+            white-space: nowrap;
+            font-weight: 600;
+            background: none;
+            border: none;
+            padding: 4px 12px 4px 12px;
+        }
+        .front-matter td {
+            border: none;
+            padding: 4px 12px;
+            font-family: 'SF Mono', Menlo, monospace;
+        }
         img {
             max-width: 100%;
             height: auto;
