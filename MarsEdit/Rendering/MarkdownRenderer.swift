@@ -71,16 +71,16 @@ struct MarkdownRenderer {
         return escapeHTML(trimmed)
     }
 
+    private static let imageSourceRegex = try! NSRegularExpression(
+        pattern: #"(<img\b[^>]*\bsrc=")([^"]+)(")"#,
+        options: [.caseInsensitive]
+    )
+
     static func resolveLocalImageSources(in html: String, relativeTo baseURL: URL?, useAssetScheme: Bool = true) -> String {
         guard let baseURL else { return html }
 
-        let pattern = #"(<img\b[^>]*\bsrc=")([^"]+)(")"#
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
-            return html
-        }
-
         let nsHTML = html as NSString
-        let matches = regex.matches(in: html, options: [], range: NSRange(location: 0, length: nsHTML.length))
+        let matches = imageSourceRegex.matches(in: html, options: [], range: NSRange(location: 0, length: nsHTML.length))
         guard !matches.isEmpty else { return html }
 
         var resolvedHTML = html

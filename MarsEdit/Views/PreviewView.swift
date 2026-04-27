@@ -22,36 +22,84 @@ struct PreviewView: NSViewRepresentable {
         webView.setValue(false, forKey: "drawsBackground")
         context.coordinator.webView = webView
 
-        loadPreview(webView: webView)
+        loadInitialShell(webView: webView, coordinator: context.coordinator)
         return webView
     }
 
     func updateNSView(_ webView: WKWebView, context: Context) {
         // Debounce preview updates
-        context.coordinator.scheduleUpdate {
-            loadPreview(webView: webView)
+        context.coordinator.scheduleUpdate { [self] in
+            self.applyUpdate(webView: webView, coordinator: context.coordinator)
         }
     }
 
-    private func loadPreview(webView: WKWebView) {
+    /// First render: load a stable HTML shell with theme CSS and an empty content div.
+    /// Subsequent updates only swap the inner HTML, preserving scroll position natively.
+    private func loadInitialShell(webView: WKWebView, coordinator: Coordinator) {
         let theme = settings.currentTheme
         let css = theme.loadCSS()
-        let htmlBody = MarkdownRenderer.resolveLocalImageSources(
+        let body = renderedBody()
+        let title = MarkdownRenderer.extractTitle(from: document.text)
+        let html = MarkdownRenderer.fullHTML(body: "<div id=\"content\">\(body)</div>", css: css, title: title)
+
+        coordinator.lastThemeID = theme.id
+        coordinator.lastBaseURL = baseURL
+        coordinator.lastBodyHTML = body
+        coordinator.isShellLoaded = false
+        coordinator.pendingBodyAfterLoad = nil
+        webView.loadHTMLString(html, baseURL: baseURL)
+    }
+
+    /// Apply the latest content. If the shell needs to be rebuilt (theme/baseURL changed),
+    /// do a full reload; otherwise inject the new body via JS.
+    private func applyUpdate(webView: WKWebView, coordinator: Coordinator) {
+        let theme = settings.currentTheme
+        let needsFullReload = coordinator.lastThemeID != theme.id
+            || coordinator.lastBaseURL != baseURL
+        if needsFullReload {
+            loadInitialShell(webView: webView, coordinator: coordinator)
+            return
+        }
+
+        let body = renderedBody()
+        if body == coordinator.lastBodyHTML { return }
+        coordinator.lastBodyHTML = body
+
+        guard coordinator.isShellLoaded else {
+            coordinator.pendingBodyAfterLoad = body
+            return
+        }
+
+        injectBody(body, into: webView)
+    }
+
+    private func renderedBody() -> String {
+        MarkdownRenderer.resolveLocalImageSources(
             in: MarkdownRenderer.renderHTML(from: document.text),
             relativeTo: baseURL
         )
-        let title = MarkdownRenderer.extractTitle(from: document.text)
-        let fullHTML = MarkdownRenderer.fullHTML(body: htmlBody, css: css, title: title)
+    }
 
-        // Preserve scroll position
-        webView.evaluateJavaScript("window.scrollY") { result, _ in
-            let scrollY = result as? CGFloat ?? 0
-            webView.loadHTMLString(fullHTML, baseURL: self.baseURL)
-            // Restore scroll after load
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                webView.evaluateJavaScript("window.scrollTo(0, \(scrollY))")
-            }
+    fileprivate func injectBody(_ body: String, into webView: WKWebView) {
+        let literal = Self.jsStringLiteral(body)
+        let script = """
+        (function(){
+          var c = document.getElementById('content');
+          if (c) { c.innerHTML = \(literal); }
+        })();
+        """
+        webView.evaluateJavaScript(script, completionHandler: nil)
+    }
+
+    /// Encode an arbitrary string as a JS string literal (with surrounding quotes)
+    /// using JSON, which handles all escaping (quotes, backslashes, newlines, lone surrogates).
+    private static func jsStringLiteral(_ s: String) -> String {
+        if let data = try? JSONSerialization.data(withJSONObject: [s], options: []),
+           let json = String(data: data, encoding: .utf8),
+           json.count >= 2 {
+            return String(json.dropFirst().dropLast())
         }
+        return "\"\""
     }
 
     // MARK: - Coordinator
@@ -60,6 +108,12 @@ struct PreviewView: NSViewRepresentable {
         var parent: PreviewView
         weak var webView: WKWebView?
         private var updateWorkItem: DispatchWorkItem?
+
+        var isShellLoaded = false
+        var lastThemeID: String?
+        var lastBaseURL: URL?
+        var lastBodyHTML: String?
+        var pendingBodyAfterLoad: String?
 
         private static let previewUpdateDebounce: TimeInterval = 0.3
 
@@ -72,6 +126,14 @@ struct PreviewView: NSViewRepresentable {
             let work = DispatchWorkItem(block: action)
             updateWorkItem = work
             DispatchQueue.main.asyncAfter(deadline: .now() + Self.previewUpdateDebounce, execute: work)
+        }
+
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            isShellLoaded = true
+            if let pending = pendingBodyAfterLoad {
+                pendingBodyAfterLoad = nil
+                parent.injectBody(pending, into: webView)
+            }
         }
 
         func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,

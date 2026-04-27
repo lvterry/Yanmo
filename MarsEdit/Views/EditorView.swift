@@ -79,12 +79,14 @@ struct EditorView: NSViewRepresentable {
         guard let textView = scrollView.documentView as? MarkdownTextView else { return }
         context.coordinator.parent = self
 
+        var textWasSetExternally = false
         if textView.string != document.text && !context.coordinator.isUpdating {
             context.coordinator.isUpdating = true
             let selectedRange = textView.selectedRange()
             textView.string = document.text
             textView.setSelectedRange(selectedRange)
             context.coordinator.isUpdating = false
+            textWasSetExternally = true
         }
 
         applyTheme(textView: textView)
@@ -98,7 +100,18 @@ struct EditorView: NSViewRepresentable {
             textView.isHorizontallyResizable = true
         }
 
-        context.coordinator.applySyntaxHighlighting()
+        // Only re-highlight the whole document when something appearance-related changed
+        // or the text was replaced from outside. Per-keystroke incremental highlighting
+        // is handled in `textDidChange`.
+        let currentThemeID = settings.currentTheme.id
+        let currentFontKey = "\(settings.editorFont.fontName):\(settings.editorFont.pointSize)"
+        let appearanceChanged = context.coordinator.lastAppliedThemeID != currentThemeID
+            || context.coordinator.lastAppliedFontKey != currentFontKey
+        if textWasSetExternally || appearanceChanged {
+            context.coordinator.lastAppliedThemeID = currentThemeID
+            context.coordinator.lastAppliedFontKey = currentFontKey
+            context.coordinator.applySyntaxHighlighting()
+        }
         context.coordinator.handleFileURLChange()
     }
 
@@ -127,7 +140,10 @@ struct EditorView: NSViewRepresentable {
         var saveSheetObserver: Any?
         var pendingImageInsert: PendingImageInsert?
         var isWaitingForSave = false
+        var lastAppliedThemeID: String?
+        var lastAppliedFontKey: String?
         private var highlightWorkItem: DispatchWorkItem?
+        private var pendingEditedRange: NSRange?
 
         init(_ parent: EditorView) {
             self.parent = parent
@@ -147,16 +163,32 @@ struct EditorView: NSViewRepresentable {
             removeSaveSheetObserver()
         }
 
+        func textView(_ textView: NSTextView, shouldChangeTextIn affectedCharRange: NSRange, replacementString: String?) -> Bool {
+            // Track the range affected by this edit so the debounced highlighter can scope
+            // its work. Accumulate across rapid edits within the debounce window.
+            let newLength = (replacementString as NSString?)?.length ?? 0
+            let edit = NSRange(location: affectedCharRange.location, length: newLength)
+            if let existing = pendingEditedRange {
+                pendingEditedRange = NSUnionRange(existing, edit)
+            } else {
+                pendingEditedRange = edit
+            }
+            return true
+        }
+
         func textDidChange(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView, !isUpdating else { return }
             isUpdating = true
             parent.document.text = textView.string
             isUpdating = false
 
-            // Debounce syntax highlighting
+            // Debounce syntax highlighting; pass the accumulated edited range so we only
+            // re-highlight the affected paragraph(s).
             highlightWorkItem?.cancel()
+            let editedRange = pendingEditedRange
+            pendingEditedRange = nil
             let work = DispatchWorkItem { [weak self] in
-                self?.applySyntaxHighlighting()
+                self?.applySyntaxHighlighting(in: editedRange)
             }
             highlightWorkItem = work
             DispatchQueue.main.asyncAfter(deadline: .now() + Self.syntaxHighlightDebounce, execute: work)
@@ -174,14 +206,14 @@ struct EditorView: NSViewRepresentable {
             }
         }
 
-        func applySyntaxHighlighting() {
+        func applySyntaxHighlighting(in editedRange: NSRange? = nil) {
             guard let textView = textView, let textStorage = textView.textStorage else { return }
             let theme = parent.settings.currentTheme
             let font = parent.settings.editorFont
             let highlighter = SyntaxHighlighter(theme: theme, font: font)
 
             textStorage.beginEditing()
-            highlighter.highlight(textStorage)
+            highlighter.highlight(textStorage, in: editedRange)
             textStorage.endEditing()
         }
 
