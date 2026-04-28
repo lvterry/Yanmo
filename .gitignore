@@ -1,1 +1,7 @@
 .DS_Store
+
+# Local tool settings
+.claude/settings.local.json
+
+# Xcode user state
+*.xcuserstate
