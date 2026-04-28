@@ -5,6 +5,15 @@ enum ViewMode: String, CaseIterable, Codable {
     case editorOnly
     case previewOnly
 
+    static var defaultMode: ViewMode {
+        // Avoid eager WKWebView creation on macOS 26+, where WebKit can log
+        // IconRendering.framework binary.metallib format warnings at startup.
+        if #available(macOS 26.0, *) {
+            return .editorOnly
+        }
+        return .split
+    }
+
     var next: ViewMode {
         switch self {
         case .split: return .editorOnly

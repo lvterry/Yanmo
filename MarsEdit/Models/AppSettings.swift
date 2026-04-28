@@ -41,6 +41,7 @@ final class AppSettings: ObservableObject {
     // MARK: - View State
     @AppStorage("toolbarVisible") var toolbarVisible: Bool = true
     @AppStorage("sidebarVisible") var sidebarVisible: Bool = false
+    @AppStorage("viewMode") var viewMode: ViewMode = .defaultMode
 
     var currentTheme: Theme {
         if !selectedThemeId.isEmpty, let theme = Theme.theme(for: selectedThemeId) {

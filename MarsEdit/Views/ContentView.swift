@@ -5,7 +5,6 @@ struct ContentView: View {
     let fileURL: URL?
     @EnvironmentObject var settings: AppSettings
 
-    @State private var viewMode: ViewMode = .split
     @State private var cursorPosition: (line: Int, column: Int) = (1, 1)
     @State private var outlineItems: [OutlineItem] = []
     private static let toastDuration: TimeInterval = 4.0
@@ -31,7 +30,7 @@ struct ContentView: View {
                 // Editor / Preview split
                 GeometryReader { geometry in
                     HSplitView {
-                        if viewMode != .previewOnly {
+                        if settings.viewMode != .previewOnly {
                             EditorView(
                                 document: document,
                                 fileURL: fileURL,
@@ -40,7 +39,7 @@ struct ContentView: View {
                             .frame(minWidth: 200)
                         }
 
-                        if viewMode != .editorOnly {
+                        if settings.viewMode != .editorOnly {
                             PreviewView(
                                 document: document,
                                 baseURL: fileURL?.deletingLastPathComponent()
@@ -69,7 +68,7 @@ struct ContentView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .cycleViewMode)) { _ in
             withAnimation(.easeInOut(duration: 0.2)) {
-                viewMode = viewMode.next
+                settings.viewMode = settings.viewMode.next
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .showToast)) { notification in
