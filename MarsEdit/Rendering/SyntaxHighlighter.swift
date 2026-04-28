@@ -57,13 +57,7 @@ struct SyntaxHighlighter {
         ]
         textStorage.setAttributes(baseAttributes, range: target)
 
-        highlightFrontMatter(textStorage, range: target, frontMatter: frontMatterRange)
-        highlightHeadings(textStorage, text: text, range: target, skipping: frontMatterRange)
-        highlightBold(textStorage, text: text, range: target, skipping: frontMatterRange)
-        highlightItalic(textStorage, text: text, range: target, skipping: frontMatterRange)
         highlightStrikethrough(textStorage, text: text, range: target, skipping: frontMatterRange)
-        highlightInlineCode(textStorage, text: text, range: target, skipping: frontMatterRange)
-        highlightCodeBlocks(textStorage, text: text, range: target, skipping: frontMatterRange)
         highlightLinks(textStorage, text: text, range: target, skipping: frontMatterRange)
         highlightImages(textStorage, text: text, range: target, skipping: frontMatterRange)
         highlightBlockquotes(textStorage, text: text, range: target, skipping: frontMatterRange)
@@ -85,29 +79,6 @@ struct SyntaxHighlighter {
         let firstLine = nsText.substring(with: firstLineRange)
             .trimmingCharacters(in: .whitespacesAndNewlines)
         return firstLine == "---"
-    }
-
-    private func highlightFrontMatter(_ storage: NSTextStorage, range: NSRange, frontMatter: NSRange?) {
-        guard let fm = frontMatter else { return }
-        let intersection = NSIntersectionRange(range, fm)
-        guard intersection.length > 0 else { return }
-
-        let monoFont = NSFont.monospacedSystemFont(ofSize: font.pointSize - 1, weight: .regular)
-        storage.addAttributes([
-            .font: monoFont,
-            .foregroundColor: NSColor.secondaryLabelColor,
-            .backgroundColor: theme.editorCodeBackground,
-        ], range: intersection)
-
-        // Slightly emphasize the delimiter lines.
-        let text = storage.string
-        let boldMono = NSFont.monospacedSystemFont(ofSize: font.pointSize - 1, weight: .semibold)
-        for match in Self.frontMatterDelimiterLineRegex.matches(in: text, range: fm) {
-            let delimRange = NSIntersectionRange(match.range, intersection)
-            if delimRange.length > 0 {
-                storage.addAttribute(.font, value: boldMono, range: delimRange)
-            }
-        }
     }
 
     private static func skip(_ matchRange: NSRange, frontMatter: NSRange?) -> Bool {
@@ -175,72 +146,12 @@ struct SyntaxHighlighter {
         return range
     }
 
-    // MARK: - Headings
-
-    private func highlightHeadings(_ storage: NSTextStorage, text: String, range: NSRange, skipping frontMatter: NSRange?) {
-        for match in Self.headingRegex.matches(in: text, range: range) {
-            if Self.skip(match.range, frontMatter: frontMatter) { continue }
-            let level = match.range(at: 1).length
-            let fontSize = max(font.pointSize, font.pointSize + CGFloat(4 - level) * 2)
-            let headingFont = NSFontManager.shared.convert(font, toSize: fontSize)
-            let boldFont = NSFontManager.shared.convert(headingFont, toHaveTrait: .boldFontMask)
-            storage.addAttributes([
-                .font: boldFont,
-                .foregroundColor: theme.editorHeadingColor,
-            ], range: match.range)
-        }
-    }
-
-    // MARK: - Bold
-
-    private func highlightBold(_ storage: NSTextStorage, text: String, range: NSRange, skipping frontMatter: NSRange?) {
-        applyInlineStyle(storage, text: text, regex: Self.boldRegex, range: range, skipping: frontMatter) { matchRange in
-            let boldFont = NSFontManager.shared.convert(font, toHaveTrait: .boldFontMask)
-            storage.addAttribute(.font, value: boldFont, range: matchRange)
-        }
-    }
-
-    // MARK: - Italic
-
-    private func highlightItalic(_ storage: NSTextStorage, text: String, range: NSRange, skipping frontMatter: NSRange?) {
-        applyInlineStyle(storage, text: text, regex: Self.italicRegex, range: range, skipping: frontMatter) { matchRange in
-            let italicFont = NSFontManager.shared.convert(font, toHaveTrait: .italicFontMask)
-            storage.addAttribute(.font, value: italicFont, range: matchRange)
-        }
-    }
-
     // MARK: - Strikethrough
 
     private func highlightStrikethrough(_ storage: NSTextStorage, text: String, range: NSRange, skipping frontMatter: NSRange?) {
         applyInlineStyle(storage, text: text, regex: Self.strikethroughRegex, range: range, skipping: frontMatter) { matchRange in
             storage.addAttribute(.strikethroughStyle, value: NSUnderlineStyle.single.rawValue, range: matchRange)
             storage.addAttribute(.foregroundColor, value: NSColor.secondaryLabelColor, range: matchRange)
-        }
-    }
-
-    // MARK: - Inline Code
-
-    private func highlightInlineCode(_ storage: NSTextStorage, text: String, range: NSRange, skipping frontMatter: NSRange?) {
-        applyInlineStyle(storage, text: text, regex: Self.inlineCodeRegex, range: range, skipping: frontMatter) { matchRange in
-            let monoFont = NSFont.monospacedSystemFont(ofSize: font.pointSize - 1, weight: .regular)
-            storage.addAttributes([
-                .font: monoFont,
-                .backgroundColor: theme.editorCodeBackground,
-            ], range: matchRange)
-        }
-    }
-
-    // MARK: - Code Blocks
-
-    private func highlightCodeBlocks(_ storage: NSTextStorage, text: String, range: NSRange, skipping frontMatter: NSRange?) {
-        for match in Self.codeBlockRegex.matches(in: text, range: range) {
-            if Self.skip(match.range, frontMatter: frontMatter) { continue }
-            let monoFont = NSFont.monospacedSystemFont(ofSize: font.pointSize - 1, weight: .regular)
-            storage.addAttributes([
-                .font: monoFont,
-                .backgroundColor: theme.editorCodeBackground,
-                .foregroundColor: theme.editorTextColor,
-            ], range: match.range)
         }
     }
 
@@ -290,7 +201,7 @@ struct SyntaxHighlighter {
             // Style the prefix: visible but dimmed
             storage.addAttributes([
                 .foregroundColor: dimmedColor,
-                .font: NSFont.monospacedSystemFont(ofSize: font.pointSize - 2, weight: .regular),
+                .font: font,
             ], range: prefixRange)
 
             // Collapse the base64 body to near-invisible (0.1pt font, transparent)
@@ -305,7 +216,7 @@ struct SyntaxHighlighter {
             // Style the closing paren: dimmed
             storage.addAttributes([
                 .foregroundColor: dimmedColor,
-                .font: NSFont.monospacedSystemFont(ofSize: font.pointSize - 2, weight: .regular),
+                .font: font,
             ], range: suffixRange)
         }
     }

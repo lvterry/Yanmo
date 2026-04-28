@@ -80,7 +80,8 @@ struct EditorView: NSViewRepresentable {
         context.coordinator.parent = self
 
         var textWasSetExternally = false
-        if textView.string != document.text && !context.coordinator.isUpdating {
+        let isComposingText = textView.hasMarkedText()
+        if textView.string != document.text && !context.coordinator.isUpdating && !isComposingText {
             context.coordinator.isUpdating = true
             let selectedRange = textView.selectedRange()
             textView.string = document.text
@@ -89,7 +90,9 @@ struct EditorView: NSViewRepresentable {
             textWasSetExternally = true
         }
 
-        applyTheme(textView: textView)
+        if !isComposingText {
+            applyTheme(textView: textView)
+        }
 
         if settings.wordWrap {
             textView.textContainer?.widthTracksTextView = true
@@ -108,9 +111,13 @@ struct EditorView: NSViewRepresentable {
         let appearanceChanged = context.coordinator.lastAppliedThemeID != currentThemeID
             || context.coordinator.lastAppliedFontKey != currentFontKey
         if textWasSetExternally || appearanceChanged {
-            context.coordinator.lastAppliedThemeID = currentThemeID
-            context.coordinator.lastAppliedFontKey = currentFontKey
-            context.coordinator.applySyntaxHighlighting()
+            if !isComposingText {
+                context.coordinator.lastAppliedThemeID = currentThemeID
+                context.coordinator.lastAppliedFontKey = currentFontKey
+                context.coordinator.applySyntaxHighlighting()
+            } else {
+                context.coordinator.deferSyntaxHighlighting(in: nil)
+            }
         }
         context.coordinator.handleFileURLChange()
     }
@@ -159,6 +166,7 @@ struct EditorView: NSViewRepresentable {
         var lastAppliedFontKey: String?
         private var highlightWorkItem: DispatchWorkItem?
         private var pendingEditedRange: NSRange?
+        private var deferredHighlightRange: NSRange?
 
         init(_ parent: EditorView) {
             self.parent = parent
@@ -193,20 +201,21 @@ struct EditorView: NSViewRepresentable {
 
         func textDidChange(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView, !isUpdating else { return }
+            let editedRange = pendingEditedRange
+            pendingEditedRange = nil
+
+            if textView.hasMarkedText() {
+                deferSyntaxHighlighting(in: editedRange)
+                return
+            }
+
             isUpdating = true
             parent.document.text = textView.string
             isUpdating = false
 
             // Debounce syntax highlighting; pass the accumulated edited range so we only
             // re-highlight the affected paragraph(s).
-            highlightWorkItem?.cancel()
-            let editedRange = pendingEditedRange
-            pendingEditedRange = nil
-            let work = DispatchWorkItem { [weak self] in
-                self?.applySyntaxHighlighting(in: editedRange)
-            }
-            highlightWorkItem = work
-            DispatchQueue.main.asyncAfter(deadline: .now() + Self.syntaxHighlightDebounce, execute: work)
+            scheduleSyntaxHighlighting(in: mergedHighlightRange(editedRange))
         }
 
         func textViewDidChangeSelection(_ notification: Notification) {
@@ -223,6 +232,11 @@ struct EditorView: NSViewRepresentable {
 
         func applySyntaxHighlighting(in editedRange: NSRange? = nil) {
             guard let textView = textView, let textStorage = textView.textStorage else { return }
+            guard !textView.hasMarkedText() else {
+                deferSyntaxHighlighting(in: editedRange)
+                return
+            }
+
             let theme = parent.settings.currentTheme
             let font = parent.settings.editorFont
             let highlighter = SyntaxHighlighter(theme: theme, font: font)
@@ -230,6 +244,39 @@ struct EditorView: NSViewRepresentable {
             textStorage.beginEditing()
             highlighter.highlight(textStorage, in: editedRange)
             textStorage.endEditing()
+        }
+
+        func deferSyntaxHighlighting(in editedRange: NSRange?) {
+            highlightWorkItem?.cancel()
+            highlightWorkItem = nil
+            if let editedRange {
+                deferredHighlightRange = merged(deferredHighlightRange, editedRange)
+            }
+        }
+
+        private func mergedHighlightRange(_ editedRange: NSRange?) -> NSRange? {
+            defer { deferredHighlightRange = nil }
+            return merged(deferredHighlightRange, editedRange)
+        }
+
+        private func scheduleSyntaxHighlighting(in editedRange: NSRange?) {
+            highlightWorkItem?.cancel()
+            let work = DispatchWorkItem { [weak self] in
+                self?.applySyntaxHighlighting(in: editedRange)
+            }
+            highlightWorkItem = work
+            DispatchQueue.main.asyncAfter(deadline: .now() + Self.syntaxHighlightDebounce, execute: work)
+        }
+
+        private func merged(_ lhs: NSRange?, _ rhs: NSRange?) -> NSRange? {
+            switch (lhs, rhs) {
+            case (nil, nil):
+                return nil
+            case (let range?, nil), (nil, let range?):
+                return range
+            case (let lhs?, let rhs?):
+                return NSUnionRange(lhs, rhs)
+            }
         }
 
         func insertFormat(_ action: FormatAction) {

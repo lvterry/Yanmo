@@ -66,7 +66,7 @@ struct Theme: Identifiable, Codable, Hashable {
 
         return """
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', 'PingFang SC', 'PingFang TC', 'Hiragino Sans GB', 'Heiti SC', 'Microsoft YaHei', 'Noto Sans CJK SC', Helvetica, Arial, sans-serif;
             font-size: 15px;
             line-height: 1.6;
             max-width: 780px;
@@ -105,7 +105,7 @@ struct Theme: Identifiable, Codable, Hashable {
         a:hover { text-decoration: underline; }
         strong { font-weight: 600; }
         code {
-            font-family: 'JetBrains Mono', 'SF Mono', 'Menlo', 'Consolas', monospace;
+            font-family: 'JetBrains Mono', 'SF Mono', 'Menlo', 'Consolas', 'PingFang SC', 'PingFang TC', 'Hiragino Sans GB', 'Heiti SC', 'Microsoft YaHei', 'Noto Sans Mono CJK SC', monospace;
             background-color: \(codeBg);
             padding: 0.2em 0.4em;
             border-radius: 6px;
@@ -174,7 +174,7 @@ struct Theme: Identifiable, Codable, Hashable {
         .front-matter td {
             border: none;
             padding: 4px 12px;
-            font-family: 'SF Mono', Menlo, monospace;
+            font-family: 'SF Mono', Menlo, 'PingFang SC', 'PingFang TC', 'Hiragino Sans GB', 'Heiti SC', 'Microsoft YaHei', 'Noto Sans Mono CJK SC', monospace;
         }
         img {
             max-width: 100%;

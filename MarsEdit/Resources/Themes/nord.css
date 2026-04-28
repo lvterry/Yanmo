@@ -1,7 +1,7 @@
 /* Nord Dark Theme */
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', 'PingFang SC', 'PingFang TC', 'Hiragino Sans GB', 'Heiti SC', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
     line-height: 1.6;
     max-width: 780px;
     margin: 0 auto;
@@ -69,7 +69,7 @@ a:hover {
 
 /* Inline code */
 code {
-    font-family: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
+    font-family: 'JetBrains Mono', 'SF Mono', 'Menlo', 'PingFang SC', 'PingFang TC', 'Hiragino Sans GB', 'Heiti SC', 'Microsoft YaHei', 'Noto Sans Mono CJK SC', monospace;
     background-color: #3b4252;
     padding: 0.2em 0.4em;
     border-radius: 4px;
@@ -157,7 +157,7 @@ tr:nth-child(even) {
 .front-matter td {
     border: none;
     padding: 4px 12px;
-    font-family: 'SF Mono', Menlo, monospace;
+    font-family: 'SF Mono', Menlo, 'PingFang SC', 'PingFang TC', 'Hiragino Sans GB', 'Heiti SC', 'Microsoft YaHei', 'Noto Sans Mono CJK SC', monospace;
 }
 
 /* Images */
