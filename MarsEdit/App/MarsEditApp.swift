@@ -123,7 +123,7 @@ struct MarsEditApp: App {
 
     // MARK: - Find Menu
     //
-    // NSTextView already handles `performFindPanelAction:` when `usesFindBar = true`
+    // NSTextView already handles `performTextFinderAction:` when `usesFindBar = true`
     // (set in EditorView.makeNSView). These menu items just need to forward the
     // standard tag-based action up the responder chain.
 
@@ -131,30 +131,30 @@ struct MarsEditApp: App {
     private var findMenuCommands: some View {
         Section {
             Menu("Find") {
-                Button("Find…") { Self.sendFindPanelAction(.showFindPanel) }
+                Button("Find…") { Self.sendTextFinderAction(.showFindInterface) }
                     .keyboardShortcut("f", modifiers: .command)
-                Button("Find Next") { Self.sendFindPanelAction(.next) }
+                Button("Find Next") { Self.sendTextFinderAction(.nextMatch) }
                     .keyboardShortcut("g", modifiers: .command)
-                Button("Find Previous") { Self.sendFindPanelAction(.previous) }
+                Button("Find Previous") { Self.sendTextFinderAction(.previousMatch) }
                     .keyboardShortcut("g", modifiers: [.command, .shift])
-                Button("Use Selection for Find") { Self.sendFindPanelAction(.setFindString) }
+                Button("Use Selection for Find") { Self.sendTextFinderAction(.setSearchString) }
                     .keyboardShortcut("e", modifiers: .command)
                 Divider()
-                Button("Replace…") { Self.sendFindPanelAction(.replaceAll) }
-                Button("Replace All") { Self.sendFindPanelAction(.replaceAll) }
-                Button("Replace") { Self.sendFindPanelAction(.replace) }
-                Button("Replace and Find") { Self.sendFindPanelAction(.replaceAndFind) }
+                Button("Replace…") { Self.sendTextFinderAction(.showReplaceInterface) }
+                Button("Replace All") { Self.sendTextFinderAction(.replaceAll) }
+                Button("Replace") { Self.sendTextFinderAction(.replace) }
+                Button("Replace and Find") { Self.sendTextFinderAction(.replaceAndFind) }
             }
         }
     }
 
     /// Forwards a Find-menu action to the first responder via the standard
-    /// AppKit `performFindPanelAction:` selector. Constructs an NSMenuItem with the
+    /// AppKit `performTextFinderAction:` selector. Constructs an NSMenuItem with the
     /// appropriate tag because that's how the receiver discovers which action to run.
-    private static func sendFindPanelAction(_ action: NSFindPanelAction) {
+    private static func sendTextFinderAction(_ action: NSTextFinder.Action) {
         let item = NSMenuItem()
-        item.tag = Int(action.rawValue)
-        NSApp.sendAction(#selector(FindPanelActionResponding.performFindPanelAction(_:)), to: nil, from: item)
+        item.tag = action.rawValue
+        NSApp.sendAction(#selector(TextFinderActionResponding.performTextFinderAction(_:)), to: nil, from: item)
     }
 
     // MARK: - View Menu
@@ -245,11 +245,9 @@ private enum SkillTemplate {
     """
 }
 
-// Lightweight protocol that exposes the AppKit selector to `#selector` without
-// pretending it's declared on NSResponder/NSText. NSTextView responds to this
-// at runtime when `usesFindBar = true`.
-@objc private protocol FindPanelActionResponding {
-    func performFindPanelAction(_ sender: Any?)
+// Lightweight protocol that exposes the AppKit selector to `#selector`.
+@objc private protocol TextFinderActionResponding {
+    func performTextFinderAction(_ sender: Any?)
 }
 
 // MARK: - Notification Names

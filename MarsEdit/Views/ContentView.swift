@@ -10,6 +10,7 @@ struct ContentView: View {
     @State private var outlineItems: [OutlineItem] = []
     private static let toastDuration: TimeInterval = 4.0
     @State private var toastMessage: String?
+    @State private var toastID = UUID()
 
     var body: some View {
         VStack(spacing: 0) {
@@ -122,10 +123,13 @@ struct ContentView: View {
     // MARK: - Toast
 
     private func showToast(_ message: String) {
+        let id = UUID()
         withAnimation {
+            toastID = id
             toastMessage = message
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + Self.toastDuration) {
+            guard toastID == id else { return }
             withAnimation {
                 toastMessage = nil
             }
@@ -144,7 +148,11 @@ struct ContentView: View {
         panel.nameFieldStringValue = suggestedFileName(extension: "html")
         panel.begin { response in
             if response == .OK, let url = panel.url {
-                try? html.write(to: url, atomically: true, encoding: .utf8)
+                do {
+                    try html.write(to: url, atomically: true, encoding: .utf8)
+                } catch {
+                    showExportError("HTML export failed: \(error.localizedDescription)")
+                }
             }
         }
     }
@@ -182,6 +190,15 @@ struct ContentView: View {
             return safe + "." + ext
         }
         return "Untitled." + ext
+    }
+
+    private func showExportError(_ message: String) {
+        let alert = NSAlert()
+        alert.messageText = "Export Error"
+        alert.informativeText = message
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
     }
 }
 

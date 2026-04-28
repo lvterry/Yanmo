@@ -84,7 +84,7 @@ struct EditorView: NSViewRepresentable {
             context.coordinator.isUpdating = true
             let selectedRange = textView.selectedRange()
             textView.string = document.text
-            textView.setSelectedRange(selectedRange)
+            textView.setSelectedRange(Self.clampedRange(selectedRange, upperBound: textView.string.utf16.count))
             context.coordinator.isUpdating = false
             textWasSetExternally = true
         }
@@ -128,6 +128,12 @@ struct EditorView: NSViewRepresentable {
             .font: font,
             .foregroundColor: theme.editorTextColor,
         ]
+    }
+
+    private static func clampedRange(_ range: NSRange, upperBound: Int) -> NSRange {
+        let location = min(max(0, range.location), upperBound)
+        let maxLength = upperBound - location
+        return NSRange(location: location, length: min(max(0, range.length), maxLength))
     }
 
     // MARK: - Coordinator

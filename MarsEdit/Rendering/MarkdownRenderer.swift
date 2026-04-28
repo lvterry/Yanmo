@@ -36,8 +36,8 @@ struct MarkdownRenderer {
     }
 
     /// Wraps rendered HTML body with a full HTML document including theme CSS.
-    static let assetCSPPolicy = "https: http: marsedit-asset:"
-    static let exportCSPPolicy = "https: http: file:"
+    static let assetCSPPolicy = "https: http: data: marsedit-asset:"
+    static let exportCSPPolicy = "https: http: data: file:"
 
     static func fullHTML(body: String, css: String, title: String = "", cspImageSources: String = assetCSPPolicy) -> String {
         """
@@ -83,19 +83,49 @@ struct MarkdownRenderer {
             .replacingOccurrences(of: "\"", with: "&quot;")
     }
 
-    /// Sanitizes a URL for safe insertion into an HTML attribute.
-    /// Blocks dangerous schemes (javascript:, vbscript:, data:text/html)
-    /// and escapes the result for attribute safety.
+    /// Sanitizes a URL for safe insertion into link attributes.
+    /// Blocks schemes that can execute script or embed active content.
     static func sanitizeURL(_ url: String) -> String {
+        sanitizeLinkURL(url)
+    }
+
+    static func sanitizeLinkURL(_ url: String) -> String {
         let trimmed = url.trimmingCharacters(in: .whitespacesAndNewlines)
         let lower = trimmed.lowercased()
             .replacingOccurrences(of: "\t", with: "")
             .replacingOccurrences(of: "\n", with: "")
 
-        // Block dangerous URL schemes
-        let blocked = ["javascript:", "vbscript:", "data:text/html"]
+        let blocked = ["javascript:", "vbscript:", "data:"]
         for scheme in blocked {
             if lower.hasPrefix(scheme) { return "" }
+        }
+
+        return escapeHTML(trimmed)
+    }
+
+    static func sanitizeImageURL(_ url: String) -> String {
+        let trimmed = url.trimmingCharacters(in: .whitespacesAndNewlines)
+        let compactLower = trimmed.lowercased()
+            .replacingOccurrences(of: "\t", with: "")
+            .replacingOccurrences(of: "\n", with: "")
+
+        if compactLower.hasPrefix("javascript:") || compactLower.hasPrefix("vbscript:") {
+            return ""
+        }
+
+        if compactLower.hasPrefix("data:") {
+            let allowedPrefixes = [
+                "data:image/png;base64,",
+                "data:image/jpeg;base64,",
+                "data:image/jpg;base64,",
+                "data:image/gif;base64,",
+                "data:image/webp;base64,",
+                "data:image/bmp;base64,",
+                "data:image/tiff;base64,",
+                "data:image/heic;base64,",
+                "data:image/heif;base64,",
+            ]
+            guard allowedPrefixes.contains(where: { compactLower.hasPrefix($0) }) else { return "" }
         }
 
         return escapeHTML(trimmed)
@@ -202,7 +232,7 @@ private struct HTMLVisitor: MarkupVisitor {
     mutating func visitCodeBlock(_ codeBlock: CodeBlock) -> String {
         let lang = codeBlock.language ?? ""
         let escaped = MarkdownRenderer.escapeHTML(codeBlock.code)
-        let langAttr = lang.isEmpty ? "" : " class=\"language-\(lang)\""
+        let langAttr = lang.isEmpty ? "" : " class=\"language-\(MarkdownRenderer.escapeHTML(lang))\""
         return "<pre><code\(langAttr)>\(escaped)</code></pre>"
     }
 
@@ -316,13 +346,13 @@ private struct HTMLVisitor: MarkupVisitor {
 
     mutating func visitLink(_ link: Link) -> String {
         let content = link.children.map { visit($0) }.joined()
-        let dest = MarkdownRenderer.sanitizeURL(link.destination ?? "")
+        let dest = MarkdownRenderer.sanitizeLinkURL(link.destination ?? "")
         return "<a href=\"\(dest)\">\(content)</a>"
     }
 
     mutating func visitImage(_ image: Image) -> String {
         let alt = image.children.map { visit($0) }.joined()
-        let src = MarkdownRenderer.sanitizeURL(image.source ?? "")
+        let src = MarkdownRenderer.sanitizeImageURL(image.source ?? "")
         let title = image.title.map { " title=\"\(MarkdownRenderer.escapeHTML($0))\"" } ?? ""
         return "<img src=\"\(src)\" alt=\"\(MarkdownRenderer.escapeHTML(alt))\"\(title)>"
     }
