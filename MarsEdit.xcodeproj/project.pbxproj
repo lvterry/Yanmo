@@ -23,6 +23,7 @@
 		A26DA0986A8ED17D4499DAB6 /* MarsEditApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38D0B910556CD1F896CE0C9B /* MarsEditApp.swift */; };
 		A81026088E46137359D19D47 /* Resources in Resources */ = {isa = PBXBuildFile; fileRef = 6E4CFD1F4E760E384D7320A0 /* Resources */; };
 		AE8524BA70118DEF47401A8E /* HTMLExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2F65D66271440CB5F9CE106 /* HTMLExporter.swift */; };
+		CC9D25612FA8D32E009EC2D1 /* Media.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CC9D25602FA8D32E009EC2D1 /* Media.xcassets */; };
 		D2F950B026B5841AB9850CBE /* EditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BBABC595D4CDD5A500EAC60 /* EditorView.swift */; };
 		F5B20C085CB4D713E52E240C /* ToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C3431F1D6C2B39029D9AABA /* ToolbarView.swift */; };
 		F68D30B32D3A2F042D0BAC6A /* PreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3987A695942E6DBB85EF8C88 /* PreviewView.swift */; };
@@ -42,8 +43,8 @@
 		395BF64CF82855D86EBF6ADF /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
 		3987A695942E6DBB85EF8C88 /* PreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewView.swift; sourceTree = "<group>"; };
 		46E4D7D56E4F2B5B92D1F3A1 /* LocalAssetSchemeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalAssetSchemeHandler.swift; sourceTree = "<group>"; };
-		5C8E74A4B1F34E398377CF21 /* FrontMatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrontMatter.swift; sourceTree = "<group>"; };
 		5A6C29EF814D1782BFA80831 /* MarsEdit.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MarsEdit.entitlements; sourceTree = "<group>"; };
+		5C8E74A4B1F34E398377CF21 /* FrontMatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrontMatter.swift; sourceTree = "<group>"; };
 		6E4CFD1F4E760E384D7320A0 /* Resources */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Resources; path = MarsEdit/Resources; sourceTree = SOURCE_ROOT; };
 		7E4312776DC33D2DB60D5F74 /* ViewMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewMode.swift; sourceTree = "<group>"; };
 		80AA1CD18CAE69F9F389B729 /* OutlineSidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutlineSidebar.swift; sourceTree = "<group>"; };
@@ -53,6 +54,7 @@
 		B54F2C6F9F7C453961CBB8BA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		BC25AE91581B786D203B1242 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		BE1F66ED40FA0CF63619A642 /* OutlineItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutlineItem.swift; sourceTree = "<group>"; };
+		CC9D25602FA8D32E009EC2D1 /* Media.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Media.xcassets; sourceTree = "<group>"; };
 		E2F65D66271440CB5F9CE106 /* HTMLExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTMLExporter.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -87,6 +89,7 @@
 		45C54025417235D821859C16 = {
 			isa = PBXGroup;
 			children = (
+				CC9D25602FA8D32E009EC2D1 /* Media.xcassets */,
 				6E4CFD1F4E760E384D7320A0 /* Resources */,
 				C45BAD11DA7C6F4A2D04C3D7 /* MarsEdit */,
 				04098D33C13E891E461050E7 /* Products */,
@@ -228,6 +231,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CC9D25612FA8D32E009EC2D1 /* Media.xcassets in Resources */,
 				A81026088E46137359D19D47 /* Resources in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -397,6 +401,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = RRSXL9JZ27;
+				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = MarsEdit/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
@@ -419,6 +424,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = RRSXL9JZ27;
+				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = MarsEdit/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";

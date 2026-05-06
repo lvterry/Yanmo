@@ -29,6 +29,7 @@ targets:
         GENERATE_INFOPLIST_FILE: "NO"
         INFOPLIST_FILE: MarsEdit/Info.plist
         CODE_SIGN_ENTITLEMENTS: MarsEdit/MarsEdit.entitlements
+        ENABLE_HARDENED_RUNTIME: "YES"
         PRODUCT_BUNDLE_IDENTIFIER: com.marsedit.app
         MACOSX_DEPLOYMENT_TARGET: "13.0"
     entitlements:
