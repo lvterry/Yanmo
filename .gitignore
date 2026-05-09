@@ -5,3 +5,7 @@
 
 # Xcode user state
 *.xcuserstate
+
+# Build artifacts
+build/
+dist/
