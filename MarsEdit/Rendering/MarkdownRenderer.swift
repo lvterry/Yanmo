@@ -157,6 +157,16 @@ struct MarkdownRenderer {
                 continue
             }
 
+            // Refuse paths that escape the document directory. The in-app
+            // scheme handler also rejects these at load time, but stripping
+            // them here keeps absolute paths from `..`-traversal references
+            // out of exported HTML/PDF entirely.
+            guard isPath(absoluteURL, containedIn: baseURL) else {
+                guard let stringRange = Range(srcRange, in: resolvedHTML) else { continue }
+                resolvedHTML.replaceSubrange(stringRange, with: "")
+                continue
+            }
+
             let resolved: URL = useAssetScheme ? localAssetURL(for: absoluteURL) : absoluteURL
             let replacement = escapeHTML(resolved.absoluteString)
             guard let stringRange = Range(srcRange, in: resolvedHTML) else { continue }
@@ -192,6 +202,18 @@ struct MarkdownRenderer {
         components.host = "local"
         components.path = fileURL.path
         return components.url ?? fileURL
+    }
+
+    /// Path-prefix containment check with a separator-aware boundary so that
+    /// e.g. `/docs/Foo` is not considered a parent of `/docs/FooBar/baz`.
+    /// Symlinks are not resolved — a symlink whose target lives elsewhere is
+    /// treated as belonging to its on-disk location, matching the usual
+    /// filesystem trust model.
+    static func isPath(_ file: URL, containedIn root: URL) -> Bool {
+        let rootPath = root.standardizedFileURL.path
+        guard !rootPath.isEmpty else { return false }
+        let prefix = rootPath.hasSuffix("/") ? rootPath : rootPath + "/"
+        return file.standardizedFileURL.path.hasPrefix(prefix)
     }
 }
 

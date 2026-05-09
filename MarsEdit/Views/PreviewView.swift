@@ -15,7 +15,14 @@ struct PreviewView: NSViewRepresentable {
     func makeNSView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
         config.preferences.setValue(true, forKey: "developerExtrasEnabled")
-        config.setURLSchemeHandler(LocalAssetSchemeHandler.shared, forURLScheme: MarkdownRenderer.localAssetScheme)
+
+        // One handler per WebView, scoped to this document's directory.
+        // `WKWebViewConfiguration.setURLSchemeHandler` cannot be replaced
+        // after the WebView is created, so we hold a strong reference and
+        // mutate `allowedRoot` when the document is saved (baseURL appears).
+        let handler = LocalAssetSchemeHandler(allowedRoot: baseURL)
+        context.coordinator.schemeHandler = handler
+        config.setURLSchemeHandler(handler, forURLScheme: MarkdownRenderer.localAssetScheme)
 
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = context.coordinator
@@ -27,6 +34,11 @@ struct PreviewView: NSViewRepresentable {
     }
 
     func updateNSView(_ webView: WKWebView, context: Context) {
+        // Keep the scheme handler's allowed root in sync with the document's
+        // current location; SwiftUI re-runs updateNSView whenever baseURL
+        // changes (e.g. after the user saves an untitled document).
+        context.coordinator.schemeHandler?.allowedRoot = baseURL
+
         // Debounce preview updates
         context.coordinator.scheduleUpdate { [self] in
             self.applyUpdate(webView: webView, coordinator: context.coordinator)
@@ -107,6 +119,7 @@ struct PreviewView: NSViewRepresentable {
     final class Coordinator: NSObject, WKNavigationDelegate {
         var parent: PreviewView
         weak var webView: WKWebView?
+        var schemeHandler: LocalAssetSchemeHandler?
         private var updateWorkItem: DispatchWorkItem?
 
         var isShellLoaded = false

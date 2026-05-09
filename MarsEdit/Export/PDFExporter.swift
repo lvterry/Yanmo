@@ -85,7 +85,10 @@ final class PDFExporter: NSObject, WKNavigationDelegate {
         let resolvedHTML = MarkdownRenderer.resolveLocalImageSources(in: augmentedHTML, relativeTo: baseURL)
 
         let config = WKWebViewConfiguration()
-        config.setURLSchemeHandler(LocalAssetSchemeHandler.shared, forURLScheme: MarkdownRenderer.localAssetScheme)
+        config.setURLSchemeHandler(
+            LocalAssetSchemeHandler(allowedRoot: baseURL),
+            forURLScheme: MarkdownRenderer.localAssetScheme
+        )
         let webView = WKWebView(
             frame: NSRect(x: 0, y: 0, width: contentWidth, height: pageDimensions.height),
             configuration: config
