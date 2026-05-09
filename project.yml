@@ -34,3 +34,13 @@ targets:
         MACOSX_DEPLOYMENT_TARGET: "13.0"
     entitlements:
       path: MarsEdit/MarsEdit.entitlements
+
+schemes:
+  MarsEdit:
+    build:
+      targets:
+        MarsEdit: all
+    run:
+      config: Debug
+    archive:
+      config: Release

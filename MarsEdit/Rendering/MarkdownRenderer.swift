@@ -282,7 +282,7 @@ private struct HTMLVisitor: MarkupVisitor {
     }
 
     mutating func visitHTMLBlock(_ html: HTMLBlock) -> String {
-        html.rawHTML
+        MarkdownRenderer.escapeHTML(html.rawHTML)
     }
 
     mutating func visitTable(_ table: Table) -> String {
@@ -366,7 +366,7 @@ private struct HTMLVisitor: MarkupVisitor {
     }
 
     mutating func visitInlineHTML(_ html: InlineHTML) -> String {
-        html.rawHTML
+        MarkdownRenderer.escapeHTML(html.rawHTML)
     }
 
     mutating func visitSymbolLink(_ symbolLink: SymbolLink) -> String {

@@ -15,9 +15,9 @@ struct OutlineParser {
         let nsText = text as NSString
         let length = nsText.length
         var lineStart = 0
+        var activeFence: (marker: Character, length: Int)?
 
         while lineStart < length {
-            let remaining = NSRange(location: lineStart, length: length - lineStart)
             let lineRange = nsText.lineRange(for: NSRange(location: lineStart, length: 0))
             // Content range excludes the newline character(s)
             var contentEnd = lineRange.location + lineRange.length
@@ -35,6 +35,18 @@ struct OutlineParser {
 
             // Advance past the full line (including newline) for the next iteration
             lineStart = lineRange.location + lineRange.length
+
+            if let fence = codeFence(in: line) {
+                if let active = activeFence {
+                    if fence.marker == active.marker && fence.length >= active.length {
+                        activeFence = nil
+                    }
+                } else {
+                    activeFence = fence
+                }
+                continue
+            }
+            if activeFence != nil { continue }
 
             let trimmed = line.trimmingCharacters(in: .whitespaces)
             guard trimmed.hasPrefix("#") else { continue }
@@ -54,5 +66,21 @@ struct OutlineParser {
             items.append(OutlineItem(level: level, title: title, range: contentRange))
         }
         return items
+    }
+
+    private static func codeFence(in line: String) -> (marker: Character, length: Int)? {
+        let trimmed = line.trimmingCharacters(in: .whitespaces)
+        guard let marker = trimmed.first, marker == "`" || marker == "~" else { return nil }
+
+        var count = 0
+        for char in trimmed {
+            if char == marker {
+                count += 1
+            } else {
+                break
+            }
+        }
+        guard count >= 3 else { return nil }
+        return (marker, count)
     }
 }
