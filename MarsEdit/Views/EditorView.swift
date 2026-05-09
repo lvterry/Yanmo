@@ -1,11 +1,13 @@
 import SwiftUI
 import AppKit
+import Combine
 
 /// Wraps NSTextView in NSViewRepresentable for the Markdown source editor.
 struct EditorView: NSViewRepresentable {
     @ObservedObject var document: MarkdownDocument
     let fileURL: URL?
     @EnvironmentObject var settings: AppSettings
+    @EnvironmentObject var session: DocumentSession
 
     @Binding var cursorPosition: (line: Int, column: Int)
 
@@ -55,23 +57,10 @@ struct EditorView: NSViewRepresentable {
         applyTheme(textView: textView)
         context.coordinator.applySyntaxHighlighting()
 
-        // Listen for format actions
-        context.coordinator.formatObserver = NotificationCenter.default.addObserver(
-            forName: .insertMarkdownFormat, object: nil, queue: .main
-        ) { notification in
-            guard let action = notification.object as? FormatAction else { return }
-            guard context.coordinator.isTargetForFormatInsertion else { return }
-            context.coordinator.insertFormat(action)
-        }
-
-        // Listen for scroll-to-heading
-        context.coordinator.scrollObserver = NotificationCenter.default.addObserver(
-            forName: .scrollToHeading, object: nil, queue: .main
-        ) { notification in
-            guard let range = notification.object as? NSRange else { return }
-            textView.scrollRangeToVisible(range)
-            textView.setSelectedRange(range)
-        }
+        // Subscribe to per-document session events. The session is scene-scoped
+        // via `focusedSceneValue`, so menu commands target the active window's
+        // session — no need to gate by key window here.
+        context.coordinator.subscribe(to: session)
 
         return scrollView
     }
@@ -166,8 +155,7 @@ struct EditorView: NSViewRepresentable {
         var textView: MarkdownTextView?
         var scrollView: NSScrollView?
         var isUpdating = false
-        var formatObserver: Any?
-        var scrollObserver: Any?
+        var sessionCancellable: AnyCancellable?
         var saveSheetObserver: Any?
         var pendingImageInsert: PendingImageInsert?
         var isWaitingForSave = false
@@ -182,9 +170,26 @@ struct EditorView: NSViewRepresentable {
         }
 
         deinit {
-            if let obs = formatObserver { NotificationCenter.default.removeObserver(obs) }
-            if let obs = scrollObserver { NotificationCenter.default.removeObserver(obs) }
             if let obs = saveSheetObserver { NotificationCenter.default.removeObserver(obs) }
+        }
+
+        func subscribe(to session: DocumentSession) {
+            sessionCancellable = session.events.sink { [weak self] event in
+                switch event {
+                case .format(let action):
+                    self?.insertFormat(action)
+                case .scrollTo(let range):
+                    self?.scrollTo(range)
+                case .cycleViewMode, .exportHTML, .exportPDF, .showToast:
+                    break
+                }
+            }
+        }
+
+        private func scrollTo(_ range: NSRange) {
+            guard let textView else { return }
+            textView.scrollRangeToVisible(range)
+            textView.setSelectedRange(range)
         }
 
         func handleFileURLChange() {
@@ -196,7 +201,6 @@ struct EditorView: NSViewRepresentable {
         }
 
         func textView(_ textView: NSTextView, shouldChangeTextIn affectedCharRange: NSRange, replacementString: String?) -> Bool {
-            markActiveEditor(textView)
             // Track the range affected by this edit so the debounced highlighter can scope
             // its work. Accumulate across rapid edits within the debounce window.
             let newLength = (replacementString as NSString?)?.length ?? 0
@@ -209,14 +213,8 @@ struct EditorView: NSViewRepresentable {
             return true
         }
 
-        func textDidBeginEditing(_ notification: Notification) {
-            guard let textView = notification.object as? NSTextView else { return }
-            markActiveEditor(textView)
-        }
-
         func textDidChange(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView, !isUpdating else { return }
-            markActiveEditor(textView)
             let editedRange = pendingEditedRange
             pendingEditedRange = nil
 
@@ -236,7 +234,6 @@ struct EditorView: NSViewRepresentable {
 
         func textViewDidChangeSelection(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView else { return }
-            markActiveEditor(textView)
             let text = textView.string as NSString
             let selectedRange = textView.selectedRange()
             let lineRange = text.lineRange(for: NSRange(location: selectedRange.location, length: 0))
@@ -245,20 +242,6 @@ struct EditorView: NSViewRepresentable {
             DispatchQueue.main.async {
                 self.parent.cursorPosition = (lineNumber, column)
             }
-        }
-
-        var isTargetForFormatInsertion: Bool {
-            guard let textView = textView, let window = textView.window, window.isKeyWindow else {
-                return false
-            }
-
-            return ActiveMarkdownEditor.shared.textView === textView
-                || window.firstResponder === textView
-        }
-
-        private func markActiveEditor(_ textView: NSTextView) {
-            guard let textView = textView as? MarkdownTextView else { return }
-            ActiveMarkdownEditor.shared.textView = textView
         }
 
         func applySyntaxHighlighting(in editedRange: NSRange? = nil) {
@@ -392,7 +375,7 @@ struct EditorView: NSViewRepresentable {
         }
 
         private func postToast(_ message: String) {
-            NotificationCenter.default.post(name: .showToast, object: message)
+            parent.session.post(.showToast(message))
         }
     }
 }
@@ -402,12 +385,7 @@ struct EditorView: NSViewRepresentable {
 protocol ImageDropDelegate: AnyObject {
     func handleImageDrop(_ image: NSImage, at insertionPoint: Int)
     func handleImagePaste(_ image: NSImage)
-}
-
-private final class ActiveMarkdownEditor {
-    static let shared = ActiveMarkdownEditor()
-
-    weak var textView: MarkdownTextView?
+    func handleUnsupportedImageDrop()
 }
 
 extension EditorView.Coordinator: ImageDropDelegate {
@@ -418,6 +396,10 @@ extension EditorView.Coordinator: ImageDropDelegate {
     func handleImagePaste(_ image: NSImage) {
         guard let textView = textView else { return }
         queueLinkedImageInsert(image, at: textView.selectedRange().location)
+    }
+
+    func handleUnsupportedImageDrop() {
+        postToast("Format not supported. Use PNG, JPEG, GIF, or WebP.")
     }
 
     private func queueLinkedImageInsert(_ image: NSImage, at location: Int) {
@@ -468,10 +450,6 @@ private enum ImageWriteError: LocalizedError {
     }
 }
 
-extension Notification.Name {
-    static let showToast = Notification.Name("showToast")
-}
-
 class MarkdownTextView: NSTextView {
     weak var imageDropDelegate: ImageDropDelegate?
 
@@ -508,10 +486,7 @@ class MarkdownTextView: NSTextView {
                     imageDropDelegate?.handleImageDrop(image, at: insertionPoint)
                     return true
                 } else {
-                    NotificationCenter.default.post(
-                        name: .showToast,
-                        object: "Format not supported. Use PNG, JPEG, GIF, or WebP."
-                    )
+                    imageDropDelegate?.handleUnsupportedImageDrop()
                     return false
                 }
             }

@@ -4,6 +4,7 @@ struct ContentView: View {
     @ObservedObject var document: MarkdownDocument
     let fileURL: URL?
     @EnvironmentObject var settings: AppSettings
+    @StateObject private var session = DocumentSession()
 
     @State private var cursorPosition: (line: Int, column: Int) = (1, 1)
     @State private var outlineItems: [OutlineItem] = []
@@ -66,21 +67,10 @@ struct ContentView: View {
                     .padding(.top, settings.toolbarVisible ? 44 : 8)
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: .cycleViewMode)) { _ in
-            withAnimation(.easeInOut(duration: 0.2)) {
-                settings.viewMode = settings.viewMode.next
-            }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .showToast)) { notification in
-            if let message = notification.object as? String {
-                showToast(message)
-            }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .exportHTML)) { _ in
-            exportHTML()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .exportPDF)) { _ in
-            exportPDF()
+        .environmentObject(session)
+        .focusedSceneValue(\.documentSession, session)
+        .onReceive(session.events) { event in
+            handle(event)
         }
         .onChange(of: document.text) { newValue in
             updateOutline(text: newValue)
@@ -92,6 +82,26 @@ struct ContentView: View {
         }
         .onChange(of: settings.appearanceMode) { mode in
             applyAppearanceMode(mode)
+        }
+    }
+
+    // MARK: - Session events
+
+    private func handle(_ event: DocumentSession.Event) {
+        switch event {
+        case .format, .scrollTo:
+            // Handled by EditorView's session subscription.
+            break
+        case .cycleViewMode:
+            withAnimation(.easeInOut(duration: 0.2)) {
+                settings.viewMode = settings.viewMode.next
+            }
+        case .exportHTML:
+            exportHTML()
+        case .exportPDF:
+            exportPDF()
+        case .showToast(let message):
+            showToast(message)
         }
     }
 
