@@ -115,7 +115,6 @@ struct EditorView: NSViewRepresentable {
     private func applyTheme(textView: NSTextView) {
         let theme = settings.currentTheme
         let font = settings.editorFont
-        let paragraphStyle = Self.editorParagraphStyle()
         textView.backgroundColor = theme.editorBackground
         textView.insertionPointColor = theme.editorTextColor
         // Seed font + typing attributes so newly typed characters render in the
@@ -125,15 +124,15 @@ struct EditorView: NSViewRepresentable {
         textView.typingAttributes = [
             .font: font,
             .foregroundColor: theme.editorTextColor,
-            .paragraphStyle: paragraphStyle,
+            .paragraphStyle: Self.editorParagraphStyle,
         ]
     }
 
-    private static func editorParagraphStyle() -> NSParagraphStyle {
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.lineSpacing = 2.0
-        return paragraphStyle
-    }
+    private static let editorParagraphStyle: NSParagraphStyle = {
+        let style = NSMutableParagraphStyle()
+        style.lineSpacing = 2.0
+        return style
+    }()
 
     private static func clampedRange(_ range: NSRange, upperBound: Int) -> NSRange {
         let location = min(max(0, range.location), upperBound)
@@ -157,10 +156,13 @@ struct EditorView: NSViewRepresentable {
         var isUpdating = false
         var sessionCancellable: AnyCancellable?
         var saveSheetObserver: Any?
+        private var saveTimeoutWork: DispatchWorkItem?
         var pendingImageInsert: PendingImageInsert?
         var isWaitingForSave = false
         var lastAppliedThemeID: String?
         var lastAppliedFontKey: String?
+        private var cachedHighlighter: SyntaxHighlighter?
+        private var cachedHighlighterKey: String?
         private var highlightWorkItem: DispatchWorkItem?
         private var pendingEditedRange: NSRange?
         private var deferredHighlightRange: NSRange?
@@ -171,6 +173,7 @@ struct EditorView: NSViewRepresentable {
 
         deinit {
             if let obs = saveSheetObserver { NotificationCenter.default.removeObserver(obs) }
+            saveTimeoutWork?.cancel()
         }
 
         func subscribe(to session: DocumentSession) {
@@ -194,6 +197,8 @@ struct EditorView: NSViewRepresentable {
 
         func handleFileURLChange() {
             guard let pending = pendingImageInsert, let fileURL = parent.fileURL else { return }
+            saveTimeoutWork?.cancel()
+            saveTimeoutWork = nil
             insertLinkedImage(pending.image, at: pending.insertionPoint, fileURL: fileURL)
             pendingImageInsert = nil
             isWaitingForSave = false
@@ -251,17 +256,31 @@ struct EditorView: NSViewRepresentable {
                 return
             }
 
-            let theme = parent.settings.currentTheme
-            let font = parent.settings.editorFont
-            let highlighter = SyntaxHighlighter(
-                theme: theme,
-                font: font,
-                paragraphStyle: EditorView.editorParagraphStyle()
-            )
-
+            let highlighter = currentHighlighter()
             textStorage.beginEditing()
             highlighter.highlight(textStorage, in: editedRange)
             textStorage.endEditing()
+        }
+
+        /// Returns a `SyntaxHighlighter` matching the current theme/font, building
+        /// (and caching) a new one only when those inputs have changed. The
+        /// highlighter is rebuilt rarely (theme/font change), but `highlight(_:in:)`
+        /// is called on every keystroke after the debounce fires.
+        private func currentHighlighter() -> SyntaxHighlighter {
+            let theme = parent.settings.currentTheme
+            let font = parent.settings.editorFont
+            let key = "\(theme.id)|\(font.fontName)|\(font.pointSize)"
+            if let cached = cachedHighlighter, cachedHighlighterKey == key {
+                return cached
+            }
+            let highlighter = SyntaxHighlighter(
+                theme: theme,
+                font: font,
+                paragraphStyle: EditorView.editorParagraphStyle
+            )
+            cachedHighlighter = highlighter
+            cachedHighlighterKey = key
+            return highlighter
         }
 
         func deferSyntaxHighlighting(in editedRange: NSRange?) {
@@ -335,25 +354,26 @@ struct EditorView: NSViewRepresentable {
                 object: window,
                 queue: .main
             ) { [weak self] _ in
-                guard let self else { return }
-                self.resolvePendingSaveOutcome(attemptsRemaining: 15)
+                self?.scheduleSaveCancellationTimeout()
             }
         }
 
-        private func resolvePendingSaveOutcome(attemptsRemaining: Int) {
-            guard isWaitingForSave else { return }
-            if parent.fileURL != nil { return }
-            guard attemptsRemaining > 0 else {
-                pendingImageInsert = nil
-                isWaitingForSave = false
-                removeSaveSheetObserver()
-                postToast("Save the document to insert images as linked files.")
-                return
+        /// After the save sheet dismisses, SwiftUI may take a moment to push the
+        /// new `fileURL` through to `parent`. If it does, `handleFileURLChange()`
+        /// (called from `updateNSView`) cancels this timeout. If not, the user
+        /// cancelled the save panel — clean up after a short grace period and
+        /// surface a toast.
+        private func scheduleSaveCancellationTimeout() {
+            saveTimeoutWork?.cancel()
+            let work = DispatchWorkItem { [weak self] in
+                guard let self, self.isWaitingForSave else { return }
+                self.pendingImageInsert = nil
+                self.isWaitingForSave = false
+                self.removeSaveSheetObserver()
+                self.postToast("Save the document to insert images as linked files.")
             }
-
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-                self?.resolvePendingSaveOutcome(attemptsRemaining: attemptsRemaining - 1)
-            }
+            saveTimeoutWork = work
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5, execute: work)
         }
 
         private func removeSaveSheetObserver() {

@@ -159,7 +159,7 @@ struct MarkdownRenderer {
 
             let resolved: URL = useAssetScheme ? localAssetURL(for: absoluteURL) : absoluteURL
             let replacement = escapeHTML(resolved.absoluteString)
-            let stringRange = Range(srcRange, in: resolvedHTML)!
+            guard let stringRange = Range(srcRange, in: resolvedHTML) else { continue }
             resolvedHTML.replaceSubrange(stringRange, with: replacement)
         }
 
