@@ -125,6 +125,7 @@ struct EditorView: NSViewRepresentable {
     private func applyTheme(textView: NSTextView) {
         let theme = settings.currentTheme
         let font = settings.editorFont
+        let paragraphStyle = Self.editorParagraphStyle()
         textView.backgroundColor = theme.editorBackground
         textView.insertionPointColor = theme.editorTextColor
         // Seed font + typing attributes so newly typed characters render in the
@@ -134,7 +135,14 @@ struct EditorView: NSViewRepresentable {
         textView.typingAttributes = [
             .font: font,
             .foregroundColor: theme.editorTextColor,
+            .paragraphStyle: paragraphStyle,
         ]
+    }
+
+    private static func editorParagraphStyle() -> NSParagraphStyle {
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineSpacing = 2.0
+        return paragraphStyle
     }
 
     private static func clampedRange(_ range: NSRange, upperBound: Int) -> NSRange {
@@ -239,7 +247,11 @@ struct EditorView: NSViewRepresentable {
 
             let theme = parent.settings.currentTheme
             let font = parent.settings.editorFont
-            let highlighter = SyntaxHighlighter(theme: theme, font: font)
+            let highlighter = SyntaxHighlighter(
+                theme: theme,
+                font: font,
+                paragraphStyle: EditorView.editorParagraphStyle()
+            )
 
             textStorage.beginEditing()
             highlighter.highlight(textStorage, in: editedRange)

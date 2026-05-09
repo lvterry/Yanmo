@@ -5,6 +5,7 @@ import AppKit
 struct SyntaxHighlighter {
     let theme: Theme
     let font: NSFont
+    let paragraphStyle: NSParagraphStyle
 
     // MARK: - Cached compiled regexes (compiled once, reused for every keystroke)
 
@@ -54,6 +55,7 @@ struct SyntaxHighlighter {
         let baseAttributes: [NSAttributedString.Key: Any] = [
             .font: font,
             .foregroundColor: theme.editorTextColor,
+            .paragraphStyle: paragraphStyle,
         ]
         textStorage.setAttributes(baseAttributes, range: target)
 
