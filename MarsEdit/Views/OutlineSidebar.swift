@@ -2,6 +2,7 @@ import SwiftUI
 
 struct OutlineSidebar: View {
     let items: [OutlineItem]
+    @EnvironmentObject private var session: DocumentSession
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -26,7 +27,7 @@ struct OutlineSidebar: View {
                     LazyVStack(alignment: .leading, spacing: 2) {
                         ForEach(items) { item in
                             Button {
-                                NotificationCenter.default.post(name: .scrollToHeading, object: item.range)
+                                session.post(.scrollTo(item.range))
                             } label: {
                                 Text(item.title)
                                     .font(fontForLevel(item.level))

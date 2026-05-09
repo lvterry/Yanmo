@@ -22,6 +22,7 @@ struct SyntaxHighlighter {
     private static let horizontalRuleRegex = try! NSRegularExpression(pattern: "^(---+|\\*\\*\\*+|___+)\\s*$", options: .anchorsMatchLines)
     private static let listMarkerRegex   = try! NSRegularExpression(pattern: "^\\s*([-*+]|\\d+\\.)\\s", options: .anchorsMatchLines)
     private static let frontMatterDelimiterLineRegex = try! NSRegularExpression(pattern: "^(---|\\.\\.\\.)\\s*$", options: .anchorsMatchLines)
+    private static let fenceMarkerRegex  = try! NSRegularExpression(pattern: "^```", options: .anchorsMatchLines)
 
     /// Highlight the storage. If `editedRange` is non-nil, only re-highlight a
     /// region around that range; otherwise re-highlight the whole document.
@@ -138,9 +139,17 @@ struct SyntaxHighlighter {
                 return NSRange(location: 0, length: fullLength)
             }
         }
-        // Also: an unbalanced fence (open ``` with no matching close) means a fence was
-        // just opened/closed — re-highlight the whole document.
-        let fenceCount = nsText.components(separatedBy: "```").count - 1
+        // Also: an unbalanced fence (open ``` with no matching close) means a
+        // fence was just opened/closed — re-highlight the whole document.
+        // `numberOfMatches` walks the text once without materializing match
+        // objects (much cheaper than the previous `components(separatedBy:)`,
+        // which allocated one Substring per fence). Anchoring to line start
+        // also matches `codeBlockRegex`'s semantics, so inline ``` no longer
+        // affects parity.
+        let fenceCount = fenceMarkerRegex.numberOfMatches(
+            in: text,
+            range: NSRange(location: 0, length: fullLength)
+        )
         if fenceCount % 2 == 1 {
             return NSRange(location: 0, length: fullLength)
         }

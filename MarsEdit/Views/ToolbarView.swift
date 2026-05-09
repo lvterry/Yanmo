@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct ToolbarView: View {
+    @EnvironmentObject private var session: DocumentSession
+
     var body: some View {
         HStack(spacing: 2) {
             toolbarButton("Bold", icon: "bold", action: .bold)
@@ -10,9 +12,9 @@ struct ToolbarView: View {
             Divider().frame(height: 20).padding(.horizontal, 4)
 
             Menu {
-                Button("Heading 1") { postFormat(.heading(1)) }
-                Button("Heading 2") { postFormat(.heading(2)) }
-                Button("Heading 3") { postFormat(.heading(3)) }
+                Button("Heading 1") { post(.heading(1)) }
+                Button("Heading 2") { post(.heading(2)) }
+                Button("Heading 3") { post(.heading(3)) }
             } label: {
                 Label("Heading", systemImage: "textformat.size")
             }
@@ -49,7 +51,7 @@ struct ToolbarView: View {
 
     private func toolbarButton(_ title: String, icon: String, action: FormatAction) -> some View {
         Button {
-            postFormat(action)
+            post(action)
         } label: {
             Image(systemName: icon)
                 .frame(width: 28, height: 24)
@@ -58,7 +60,7 @@ struct ToolbarView: View {
         .help(title)
     }
 
-    private func postFormat(_ action: FormatAction) {
-        NotificationCenter.default.post(name: .insertMarkdownFormat, object: action)
+    private func post(_ action: FormatAction) {
+        session.post(.format(action))
     }
 }

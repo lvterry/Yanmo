@@ -192,59 +192,105 @@ struct Theme: Identifiable, Codable, Hashable {
         """
     }
 
-    // Editor pane colors derived from theme mode
+    // MARK: - Editor pane colors
+
     var editorBackground: NSColor {
-        switch id {
-        case "default-light": return NSColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0)
-        case "default-dark": return NSColor(red: 0.118, green: 0.118, blue: 0.118, alpha: 1.0)
-        case "solarized-light": return NSColor(red: 0.992, green: 0.965, blue: 0.890, alpha: 1.0)
-        case "solarized-dark": return NSColor(red: 0.0, green: 0.169, blue: 0.212, alpha: 1.0)
-        case "nord": return NSColor(red: 0.180, green: 0.204, blue: 0.251, alpha: 1.0)
-        case "github": return NSColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0)
-        default: return mode == .light ? .white : NSColor(red: 0.118, green: 0.118, blue: 0.118, alpha: 1.0)
-        }
+        Self.palettes[id]?.background
+            ?? (mode == .light ? .white : EditorPalette.defaultDark.background)
     }
 
     var editorTextColor: NSColor {
-        switch id {
-        case "default-light": return NSColor(red: 0.141, green: 0.161, blue: 0.180, alpha: 1.0)
-        case "default-dark": return NSColor(red: 0.831, green: 0.831, blue: 0.831, alpha: 1.0)
-        case "solarized-light": return NSColor(red: 0.396, green: 0.482, blue: 0.514, alpha: 1.0)
-        case "solarized-dark": return NSColor(red: 0.514, green: 0.580, blue: 0.588, alpha: 1.0)
-        case "nord": return NSColor(red: 0.847, green: 0.871, blue: 0.914, alpha: 1.0)
-        case "github": return NSColor(red: 0.141, green: 0.161, blue: 0.184, alpha: 1.0)
-        default: return mode == .light ? .black : .white
-        }
+        Self.palettes[id]?.text
+            ?? (mode == .light ? .black : .white)
     }
 
     var editorHeadingColor: NSColor {
-        switch id {
-        case "solarized-light", "solarized-dark": return NSColor(red: 0.149, green: 0.545, blue: 0.824, alpha: 1.0)
-        case "nord": return NSColor(red: 0.533, green: 0.753, blue: 0.816, alpha: 1.0)
-        default: return editorTextColor
-        }
+        Self.palettes[id]?.heading ?? editorTextColor
     }
 
     var editorLinkColor: NSColor {
-        switch id {
-        case "default-light": return NSColor(red: 0.012, green: 0.400, blue: 0.839, alpha: 1.0)
-        case "default-dark": return NSColor(red: 0.345, green: 0.651, blue: 1.0, alpha: 1.0)
-        case "solarized-light", "solarized-dark": return NSColor(red: 0.149, green: 0.545, blue: 0.824, alpha: 1.0)
-        case "nord": return NSColor(red: 0.533, green: 0.753, blue: 0.816, alpha: 1.0)
-        case "github": return NSColor(red: 0.035, green: 0.412, blue: 0.855, alpha: 1.0)
-        default: return .linkColor
-        }
+        Self.palettes[id]?.link ?? .linkColor
     }
 
     var editorCodeBackground: NSColor {
-        switch id {
-        case "default-light": return NSColor(red: 0.965, green: 0.973, blue: 0.980, alpha: 1.0)
-        case "default-dark": return NSColor(red: 0.176, green: 0.176, blue: 0.176, alpha: 1.0)
-        case "solarized-light": return NSColor(red: 0.933, green: 0.910, blue: 0.835, alpha: 1.0)
-        case "solarized-dark": return NSColor(red: 0.027, green: 0.212, blue: 0.259, alpha: 1.0)
-        case "nord": return NSColor(red: 0.231, green: 0.259, blue: 0.322, alpha: 1.0)
-        case "github": return NSColor(red: 0.937, green: 0.945, blue: 0.957, alpha: 1.0)
-        default: return mode == .light ? NSColor(white: 0.95, alpha: 1.0) : NSColor(white: 0.2, alpha: 1.0)
-        }
+        Self.palettes[id]?.codeBackground
+            ?? (mode == .light ? NSColor(white: 0.95, alpha: 1.0) : NSColor(white: 0.2, alpha: 1.0))
     }
+}
+
+// MARK: - Editor color palettes
+//
+// Per-theme NSColors used by the syntax highlighter and editor chrome. Kept in
+// one place so colors can be scanned/compared across themes and tweaked without
+// hunting through five parallel switch statements.
+
+private struct EditorPalette {
+    let background: NSColor
+    let text: NSColor
+    let heading: NSColor?
+    let link: NSColor?
+    let codeBackground: NSColor
+
+    static let defaultLight = EditorPalette(
+        background:     NSColor(red: 1.000, green: 1.000, blue: 1.000, alpha: 1.0),
+        text:           NSColor(red: 0.141, green: 0.161, blue: 0.180, alpha: 1.0),
+        heading:        nil,
+        link:           NSColor(red: 0.012, green: 0.400, blue: 0.839, alpha: 1.0),
+        codeBackground: NSColor(red: 0.965, green: 0.973, blue: 0.980, alpha: 1.0)
+    )
+
+    static let defaultDark = EditorPalette(
+        background:     NSColor(red: 0.118, green: 0.118, blue: 0.118, alpha: 1.0),
+        text:           NSColor(red: 0.831, green: 0.831, blue: 0.831, alpha: 1.0),
+        heading:        nil,
+        link:           NSColor(red: 0.345, green: 0.651, blue: 1.000, alpha: 1.0),
+        codeBackground: NSColor(red: 0.176, green: 0.176, blue: 0.176, alpha: 1.0)
+    )
+
+    static let solarizedLight = EditorPalette(
+        background:     NSColor(red: 0.992, green: 0.965, blue: 0.890, alpha: 1.0),
+        text:           NSColor(red: 0.396, green: 0.482, blue: 0.514, alpha: 1.0),
+        heading:        solarizedAccent,
+        link:           solarizedAccent,
+        codeBackground: NSColor(red: 0.933, green: 0.910, blue: 0.835, alpha: 1.0)
+    )
+
+    static let solarizedDark = EditorPalette(
+        background:     NSColor(red: 0.000, green: 0.169, blue: 0.212, alpha: 1.0),
+        text:           NSColor(red: 0.514, green: 0.580, blue: 0.588, alpha: 1.0),
+        heading:        solarizedAccent,
+        link:           solarizedAccent,
+        codeBackground: NSColor(red: 0.027, green: 0.212, blue: 0.259, alpha: 1.0)
+    )
+
+    static let nord = EditorPalette(
+        background:     NSColor(red: 0.180, green: 0.204, blue: 0.251, alpha: 1.0),
+        text:           NSColor(red: 0.847, green: 0.871, blue: 0.914, alpha: 1.0),
+        heading:        nordAccent,
+        link:           nordAccent,
+        codeBackground: NSColor(red: 0.231, green: 0.259, blue: 0.322, alpha: 1.0)
+    )
+
+    static let github = EditorPalette(
+        background:     NSColor(red: 1.000, green: 1.000, blue: 1.000, alpha: 1.0),
+        text:           NSColor(red: 0.141, green: 0.161, blue: 0.184, alpha: 1.0),
+        heading:        nil,
+        link:           NSColor(red: 0.035, green: 0.412, blue: 0.855, alpha: 1.0),
+        codeBackground: NSColor(red: 0.937, green: 0.945, blue: 0.957, alpha: 1.0)
+    )
+
+    // Shared accent colors used by multiple palettes.
+    private static let solarizedAccent = NSColor(red: 0.149, green: 0.545, blue: 0.824, alpha: 1.0)
+    private static let nordAccent      = NSColor(red: 0.533, green: 0.753, blue: 0.816, alpha: 1.0)
+}
+
+extension Theme {
+    fileprivate static let palettes: [String: EditorPalette] = [
+        "default-light":   .defaultLight,
+        "default-dark":    .defaultDark,
+        "solarized-light": .solarizedLight,
+        "solarized-dark":  .solarizedDark,
+        "nord":            .nord,
+        "github":          .github,
+    ]
 }

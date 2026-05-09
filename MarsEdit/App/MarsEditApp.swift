@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import Combine
 
 @main
 struct MarsEditApp: App {
@@ -13,35 +14,12 @@ struct MarsEditApp: App {
         }
         .commands {
             SkillCommands()
-            CommandGroup(replacing: .textFormatting) {
-                formatMenuCommands
-            }
-            CommandGroup(after: .pasteboard) {
-                findMenuCommands
-            }
-            CommandGroup(after: .toolbar) {
-                viewMenuCommands
-            }
+            FormatCommands()
+            FindCommands()
+            ViewModeCommands(settings: settings)
             CommandGroup(replacing: .help) {}
-            exportCommands
-            CommandGroup(after: .windowArrangement) {
-                Section {
-                    Button("Increase Font Size") {
-                        settings.increaseFontSize()
-                    }
-                    .keyboardShortcut("+", modifiers: .command)
-
-                    Button("Decrease Font Size") {
-                        settings.decreaseFontSize()
-                    }
-                    .keyboardShortcut("-", modifiers: .command)
-
-                    Button("Reset Font Size") {
-                        settings.resetFontSize()
-                    }
-                    .keyboardShortcut("0", modifiers: .command)
-                }
-            }
+            ExportCommands()
+            FontSizeCommands(settings: settings)
         }
 
         Settings {
@@ -49,151 +27,165 @@ struct MarsEditApp: App {
                 .environmentObject(settings)
         }
     }
+}
 
-    // MARK: - Format Menu
+// MARK: - Format Menu
 
-    @ViewBuilder
-    private var formatMenuCommands: some View {
-        Button("Bold") {
-            NotificationCenter.default.post(name: .insertMarkdownFormat, object: FormatAction.bold)
-        }
-        .keyboardShortcut("b", modifiers: .command)
+private struct FormatCommands: Commands {
+    @FocusedValue(\.documentSession) private var session: DocumentSession?
 
-        Button("Italic") {
-            NotificationCenter.default.post(name: .insertMarkdownFormat, object: FormatAction.italic)
-        }
-        .keyboardShortcut("i", modifiers: .command)
+    var body: some Commands {
+        CommandGroup(replacing: .textFormatting) {
+            Button("Bold") { post(.bold) }
+                .keyboardShortcut("b", modifiers: .command)
+            Button("Italic") { post(.italic) }
+                .keyboardShortcut("i", modifiers: .command)
+            Button("Inline Code") { post(.inlineCode) }
+                .keyboardShortcut("k", modifiers: [.command, .shift])
+            Button("Insert Link") { post(.link) }
+                .keyboardShortcut("k", modifiers: .command)
 
-        Button("Inline Code") {
-            NotificationCenter.default.post(name: .insertMarkdownFormat, object: FormatAction.inlineCode)
-        }
-        .keyboardShortcut("k", modifiers: [.command, .shift])
+            Divider()
 
-        Button("Insert Link") {
-            NotificationCenter.default.post(name: .insertMarkdownFormat, object: FormatAction.link)
-        }
-        .keyboardShortcut("k", modifiers: .command)
-
-        Divider()
-
-        Menu("Heading") {
-            ForEach(1...3, id: \.self) { level in
-                Button("H\(level)") {
-                    NotificationCenter.default.post(name: .insertMarkdownFormat, object: FormatAction.heading(level))
+            Menu("Heading") {
+                ForEach(1...3, id: \.self) { level in
+                    Button("H\(level)") { post(.heading(level)) }
                 }
             }
-        }
 
-        Button("Blockquote") {
-            NotificationCenter.default.post(name: .insertMarkdownFormat, object: FormatAction.blockquote)
-        }
+            Button("Blockquote") { post(.blockquote) }
+            Button("Horizontal Rule") { post(.horizontalRule) }
 
-        Button("Horizontal Rule") {
-            NotificationCenter.default.post(name: .insertMarkdownFormat, object: FormatAction.horizontalRule)
-        }
+            Divider()
 
-        Divider()
+            Button("Ordered List") { post(.orderedList) }
+            Button("Unordered List") { post(.unorderedList) }
+            Button("Task List") { post(.taskList) }
 
-        Button("Ordered List") {
-            NotificationCenter.default.post(name: .insertMarkdownFormat, object: FormatAction.orderedList)
-        }
+            Divider()
 
-        Button("Unordered List") {
-            NotificationCenter.default.post(name: .insertMarkdownFormat, object: FormatAction.unorderedList)
-        }
-
-        Button("Task List") {
-            NotificationCenter.default.post(name: .insertMarkdownFormat, object: FormatAction.taskList)
-        }
-
-        Divider()
-
-        Button("Code Block") {
-            NotificationCenter.default.post(name: .insertMarkdownFormat, object: FormatAction.codeBlock)
-        }
-
-        Button("Strikethrough") {
-            NotificationCenter.default.post(name: .insertMarkdownFormat, object: FormatAction.strikethrough)
-        }
-
-        Button("Image") {
-            NotificationCenter.default.post(name: .insertMarkdownFormat, object: FormatAction.image)
+            Button("Code Block") { post(.codeBlock) }
+            Button("Strikethrough") { post(.strikethrough) }
+            Button("Image") { post(.image) }
         }
     }
 
-    // MARK: - Find Menu
-    //
-    // NSTextView already handles `performTextFinderAction:` when `usesFindBar = true`
-    // (set in EditorView.makeNSView). These menu items just need to forward the
-    // standard tag-based action up the responder chain.
+    private func post(_ action: FormatAction) {
+        session?.post(.format(action))
+    }
+}
 
-    @ViewBuilder
-    private var findMenuCommands: some View {
-        Section {
-            Menu("Find") {
-                Button("Find…") { Self.sendTextFinderAction(.showFindInterface) }
-                    .keyboardShortcut("f", modifiers: .command)
-                Button("Find Next") { Self.sendTextFinderAction(.nextMatch) }
-                    .keyboardShortcut("g", modifiers: .command)
-                Button("Find Previous") { Self.sendTextFinderAction(.previousMatch) }
-                    .keyboardShortcut("g", modifiers: [.command, .shift])
-                Button("Use Selection for Find") { Self.sendTextFinderAction(.setSearchString) }
-                    .keyboardShortcut("e", modifiers: .command)
-                Divider()
-                Button("Replace…") { Self.sendTextFinderAction(.showReplaceInterface) }
-                Button("Replace All") { Self.sendTextFinderAction(.replaceAll) }
-                Button("Replace") { Self.sendTextFinderAction(.replace) }
-                Button("Replace and Find") { Self.sendTextFinderAction(.replaceAndFind) }
+// MARK: - Find Menu
+//
+// NSTextView already handles `performTextFinderAction:` when `usesFindBar = true`
+// (set in EditorView.makeNSView). These menu items just need to forward the
+// standard tag-based action up the responder chain.
+
+private struct FindCommands: Commands {
+    var body: some Commands {
+        CommandGroup(after: .pasteboard) {
+            Section {
+                Menu("Find") {
+                    Button("Find…") { Self.send(.showFindInterface) }
+                        .keyboardShortcut("f", modifiers: .command)
+                    Button("Find Next") { Self.send(.nextMatch) }
+                        .keyboardShortcut("g", modifiers: .command)
+                    Button("Find Previous") { Self.send(.previousMatch) }
+                        .keyboardShortcut("g", modifiers: [.command, .shift])
+                    Button("Use Selection for Find") { Self.send(.setSearchString) }
+                        .keyboardShortcut("e", modifiers: .command)
+                    Divider()
+                    Button("Replace…") { Self.send(.showReplaceInterface) }
+                    Button("Replace All") { Self.send(.replaceAll) }
+                    Button("Replace") { Self.send(.replace) }
+                    Button("Replace and Find") { Self.send(.replaceAndFind) }
+                }
             }
         }
     }
 
     /// Forwards a Find-menu action to the first responder via the standard
-    /// AppKit `performTextFinderAction:` selector. Constructs an NSMenuItem with the
-    /// appropriate tag because that's how the receiver discovers which action to run.
-    private static func sendTextFinderAction(_ action: NSTextFinder.Action) {
+    /// AppKit `performTextFinderAction:` selector. Constructs an NSMenuItem with
+    /// the appropriate tag because that's how the receiver discovers which
+    /// action to run.
+    private static func send(_ action: NSTextFinder.Action) {
         let item = NSMenuItem()
         item.tag = action.rawValue
         NSApp.sendAction(#selector(TextFinderActionResponding.performTextFinderAction(_:)), to: nil, from: item)
     }
+}
 
-    // MARK: - View Menu
+// MARK: - View Menu
 
-    @ViewBuilder
-    private var viewMenuCommands: some View {
-        Button("Toggle Toolbar") {
-            settings.toolbarVisible.toggle()
+private struct ViewModeCommands: Commands {
+    @ObservedObject var settings: AppSettings
+    @FocusedValue(\.documentSession) private var session: DocumentSession?
+
+    var body: some Commands {
+        CommandGroup(after: .toolbar) {
+            Button("Toggle Toolbar") {
+                settings.toolbarVisible.toggle()
+            }
+            .keyboardShortcut("t", modifiers: [.command, .shift])
+
+            Button("Toggle Sidebar") {
+                settings.sidebarVisible.toggle()
+            }
+            .keyboardShortcut("l", modifiers: [.command, .shift])
+
+            Button("Cycle View Mode") {
+                session?.post(.cycleViewMode)
+            }
+            .keyboardShortcut("p", modifiers: [.command, .shift])
         }
-        .keyboardShortcut("t", modifiers: [.command, .shift])
-
-        Button("Toggle Sidebar") {
-            settings.sidebarVisible.toggle()
-        }
-        .keyboardShortcut("l", modifiers: [.command, .shift])
-
-        Button("Cycle View Mode") {
-            NotificationCenter.default.post(name: .cycleViewMode, object: nil)
-        }
-        .keyboardShortcut("p", modifiers: [.command, .shift])
-
     }
+}
 
-    // MARK: - Export
+// MARK: - Export
 
-    private var exportCommands: some Commands {
+private struct ExportCommands: Commands {
+    @FocusedValue(\.documentSession) private var session: DocumentSession?
+
+    var body: some Commands {
         CommandGroup(after: .importExport) {
             Button("Export to HTML…") {
-                NotificationCenter.default.post(name: .exportHTML, object: nil)
+                session?.post(.exportHTML)
             }
             .keyboardShortcut("e", modifiers: [.command, .shift])
 
             Button("Export to PDF…") {
-                NotificationCenter.default.post(name: .exportPDF, object: nil)
+                session?.post(.exportPDF)
             }
             .keyboardShortcut("d", modifiers: [.command, .shift])
         }
     }
+}
 
+// MARK: - Font Size
+
+private struct FontSizeCommands: Commands {
+    @ObservedObject var settings: AppSettings
+
+    var body: some Commands {
+        CommandGroup(after: .windowArrangement) {
+            Section {
+                Button("Increase Font Size") {
+                    settings.increaseFontSize()
+                }
+                .keyboardShortcut("+", modifiers: .command)
+
+                Button("Decrease Font Size") {
+                    settings.decreaseFontSize()
+                }
+                .keyboardShortcut("-", modifiers: .command)
+
+                Button("Reset Font Size") {
+                    settings.resetFontSize()
+                }
+                .keyboardShortcut("0", modifiers: .command)
+            }
+        }
+    }
 }
 
 // MARK: - Skill Template Commands
@@ -250,14 +242,40 @@ private enum SkillTemplate {
     func performTextFinderAction(_ sender: Any?)
 }
 
-// MARK: - Notification Names
+// MARK: - Document Session
+//
+// Per-document event hub. Each `ContentView` owns one and publishes it as a
+// `focusedSceneValue` so app-wide menu commands can target the active window's
+// session without broadcasting through `NotificationCenter`. Within a window,
+// child views (toolbar, outline, editor) reach the same session through
+// `@EnvironmentObject` and post typed events.
 
-extension Notification.Name {
-    static let insertMarkdownFormat = Notification.Name("insertMarkdownFormat")
-    static let cycleViewMode = Notification.Name("cycleViewMode")
-    static let exportHTML = Notification.Name("exportHTML")
-    static let exportPDF = Notification.Name("exportPDF")
-    static let scrollToHeading = Notification.Name("scrollToHeading")
+final class DocumentSession: ObservableObject {
+    enum Event {
+        case format(FormatAction)
+        case scrollTo(NSRange)
+        case cycleViewMode
+        case exportHTML
+        case exportPDF
+        case showToast(String)
+    }
+
+    let events = PassthroughSubject<Event, Never>()
+
+    func post(_ event: Event) {
+        events.send(event)
+    }
+}
+
+private struct DocumentSessionFocusedKey: FocusedValueKey {
+    typealias Value = DocumentSession
+}
+
+extension FocusedValues {
+    var documentSession: DocumentSession? {
+        get { self[DocumentSessionFocusedKey.self] }
+        set { self[DocumentSessionFocusedKey.self] = newValue }
+    }
 }
 
 // MARK: - Format Actions
