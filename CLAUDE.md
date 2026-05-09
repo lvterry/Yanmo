@@ -61,7 +61,7 @@ text  ──>  MarkdownDocument  ──>  EditorView (NSTextView)
 ## Conventions & gotchas
 
 - **XcodeGen.** Edit `project.yml`, then re-run `xcodegen generate`. Never edit the `.xcodeproj` directly.
-- **NotificationCenter dispatch.** Format actions, view-mode cycling, export, scroll-to-heading, and toasts are posted as notifications (e.g. `.insertMarkdownFormat`, `.cycleViewMode`, `.exportHTML`, `.exportPDF`, `.scrollToHeading`, `.showToast`). Toolbar/menu post; `EditorView` / `ContentView` observe. Search `NotificationCenter` to find handlers.
+- **NotificationCenter dispatch.** Format actions, view-mode cycling, export, scroll-to-heading, and toasts are posted as notifications (e.g. `.insertMarkdownFormat`, `.cycleViewMode`, `.exportHTML`, `.exportPDF`, `.scrollToHeading`, `.showToast`). Toolbar/menu post; `EditorView` / `ContentView` observe. `.insertMarkdownFormat` is a global notification, so `EditorView` must gate handling to the active editor in the key window (`ActiveMarkdownEditor` / first responder) to avoid formatting every open document. Search `NotificationCenter` to find handlers.
 - **NSTextView, not SwiftUI `TextEditor`.** Chosen for IME, find bar, performance. Don't replace.
 - **Debounced, scoped syntax highlighting (~150ms).** Must skip fenced code blocks and front matter regions. During IME composition (`textView.hasMarkedText()`) highlighting and updates are deferred — preserve this when changing the editor.
 - **Preview HTML shell loads once.** Subsequent updates inject the body via JS to preserve scroll position. Don't reload on every keystroke.

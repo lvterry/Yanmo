@@ -60,6 +60,7 @@ struct EditorView: NSViewRepresentable {
             forName: .insertMarkdownFormat, object: nil, queue: .main
         ) { notification in
             guard let action = notification.object as? FormatAction else { return }
+            guard context.coordinator.isTargetForFormatInsertion else { return }
             context.coordinator.insertFormat(action)
         }
 
@@ -195,6 +196,7 @@ struct EditorView: NSViewRepresentable {
         }
 
         func textView(_ textView: NSTextView, shouldChangeTextIn affectedCharRange: NSRange, replacementString: String?) -> Bool {
+            markActiveEditor(textView)
             // Track the range affected by this edit so the debounced highlighter can scope
             // its work. Accumulate across rapid edits within the debounce window.
             let newLength = (replacementString as NSString?)?.length ?? 0
@@ -207,8 +209,14 @@ struct EditorView: NSViewRepresentable {
             return true
         }
 
+        func textDidBeginEditing(_ notification: Notification) {
+            guard let textView = notification.object as? NSTextView else { return }
+            markActiveEditor(textView)
+        }
+
         func textDidChange(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView, !isUpdating else { return }
+            markActiveEditor(textView)
             let editedRange = pendingEditedRange
             pendingEditedRange = nil
 
@@ -228,6 +236,7 @@ struct EditorView: NSViewRepresentable {
 
         func textViewDidChangeSelection(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView else { return }
+            markActiveEditor(textView)
             let text = textView.string as NSString
             let selectedRange = textView.selectedRange()
             let lineRange = text.lineRange(for: NSRange(location: selectedRange.location, length: 0))
@@ -236,6 +245,20 @@ struct EditorView: NSViewRepresentable {
             DispatchQueue.main.async {
                 self.parent.cursorPosition = (lineNumber, column)
             }
+        }
+
+        var isTargetForFormatInsertion: Bool {
+            guard let textView = textView, let window = textView.window, window.isKeyWindow else {
+                return false
+            }
+
+            return ActiveMarkdownEditor.shared.textView === textView
+                || window.firstResponder === textView
+        }
+
+        private func markActiveEditor(_ textView: NSTextView) {
+            guard let textView = textView as? MarkdownTextView else { return }
+            ActiveMarkdownEditor.shared.textView = textView
         }
 
         func applySyntaxHighlighting(in editedRange: NSRange? = nil) {
@@ -379,6 +402,12 @@ struct EditorView: NSViewRepresentable {
 protocol ImageDropDelegate: AnyObject {
     func handleImageDrop(_ image: NSImage, at insertionPoint: Int)
     func handleImagePaste(_ image: NSImage)
+}
+
+private final class ActiveMarkdownEditor {
+    static let shared = ActiveMarkdownEditor()
+
+    weak var textView: MarkdownTextView?
 }
 
 extension EditorView.Coordinator: ImageDropDelegate {
