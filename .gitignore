@@ -4,7 +4,16 @@
 .claude/settings.local.json
 
 # Xcode user state
+xcuserdata/
+*.xcuserdata/
+*.xcuserdatad/
 *.xcuserstate
+
+# SwiftPM local state
+.swiftpm/
+
+# Xcode build products and indexes
+DerivedData/
 
 # Build artifacts
 build/
