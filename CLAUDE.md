@@ -61,7 +61,7 @@ text  ──>  MarkdownDocument  ──>  EditorView (NSTextView)
 ## Conventions & gotchas
 
 - **XcodeGen.** Edit `project.yml`, then re-run `xcodegen generate`. Never edit the `.xcodeproj` directly.
-- **NotificationCenter dispatch.** Format actions, view-mode cycling, export, scroll-to-heading, and toasts are posted as notifications (e.g. `.insertMarkdownFormat`, `.cycleViewMode`, `.exportHTML`, `.exportPDF`, `.scrollToHeading`, `.showToast`). Toolbar/menu post; `EditorView` / `ContentView` observe. `.insertMarkdownFormat` is a global notification, so `EditorView` must gate handling to the active editor in the key window (`ActiveMarkdownEditor` / first responder) to avoid formatting every open document. Search `NotificationCenter` to find handlers.
+- **`DocumentSession` event flow.** Format actions, view-mode cycling, export, scroll-to-heading, and toasts flow through the per-window `DocumentSession` (typed `PassthroughSubject<Event, Never>`). Children get it via `@EnvironmentObject`; menu commands target the active window via `@FocusedValue(\.documentSession)` published from `ContentView` with `focusedSceneValue`. To find handlers, search `session.events.sink` and `.onReceive(session.events)`. Don't use `NotificationCenter` for app-internal events — that's reserved for AppKit system notifications (e.g. `NSWindow.didEndSheetNotification`).
 - **NSTextView, not SwiftUI `TextEditor`.** Chosen for IME, find bar, performance. Don't replace.
 - **Debounced, scoped syntax highlighting (~150ms).** Must skip fenced code blocks and front matter regions. During IME composition (`textView.hasMarkedText()`) highlighting and updates are deferred — preserve this when changing the editor.
 - **Preview HTML shell loads once.** Subsequent updates inject the body via JS to preserve scroll position. Don't reload on every keystroke.
@@ -70,6 +70,76 @@ text  ──>  MarkdownDocument  ──>  EditorView (NSTextView)
 - **Adding a theme.** Drop a CSS file in `MarsEdit/Resources/Themes/` and register it in `Theme.swift`.
 - **Settings.** Persisted via `@AppStorage` (UserDefaults). No iCloud sync.
 - **Image drag-drop.** Dropped images are saved as PNG into a sibling `Assets/` folder next to the document, and a relative markdown reference (`Assets/<filename>`) is inserted.
+
+## Design principles
+
+Project-specific rules. Aligned with Apple HIG and macOS document-based app conventions, but written for *this* codebase — follow these for changes here.
+
+### Event flow
+
+- Every window owns one `DocumentSession` (`@StateObject` in `ContentView`). It exposes a typed `PassthroughSubject<Event, Never>` and is the single bus for app-internal events.
+- New cross-view events: add a case to `DocumentSession.Event`. Don't introduce new `Notification.Name`s for app-internal flow.
+- Menu commands target the **focused scene** via `@FocusedValue(\.documentSession)` — never broadcast. AppKit's responder chain handles the dispatch; we don't.
+- Don't add singletons to "find" the active editor/document. Per-scene focus routing already does this; if you need scoping, derive it from the session.
+- AppKit system notifications (`NSWindow.didEndSheetNotification`, etc.) stay on `NotificationCenter` — those are platform contracts, not our event flow.
+
+### State ownership
+
+- Per-document state (cursor, outline, toast, in-flight format action) lives on `ContentView` / `MarkdownDocument` / `DocumentSession`, scoped to one window.
+- Cross-document settings (theme, font, view mode, appearance) live on `AppSettings` via `@AppStorage`. Global by design.
+- Decision rule: if two open documents could legitimately differ on it, it's per-document. If it should be uniform, it's a setting.
+- State derived from `text` (wordCount, outline) is cached on the model and invalidated in `text`'s `didSet`. **Don't** make the cache `@Published` — the source's `objectWillChange` is enough; a second publish is wasted work.
+
+### Caching & hot paths
+
+Two paths run dozens of times per second on multi-MB documents: per-keystroke highlighting (`EditorView.Coordinator.applySyntaxHighlighting`) and per-`body`-recompute reads from `MarkdownDocument` / `StatusBarView`. Anything they touch must be cached or O(1) per call.
+
+- Cache key encodes the inputs that produced the cached value (e.g. `"\(theme.id)|\(font.fontName)|\(font.pointSize)"`). Compare keys to decide reuse vs. rebuild.
+- No `[Substring]` allocations from full-text splits. `components(separatedBy:)` and `text.split(_:)` are banned in hot paths — use scalar walks or `NSRegularExpression.numberOfMatches`.
+- Heavy reference-type values (`NSMutableParagraphStyle`, `NSRegularExpression`) are `static let`. Never instantiated per call.
+- All `try!` regex initializers are at type level, one per line, so a malformed pattern points at the failing regex.
+
+### NSViewRepresentable lifecycle
+
+- `makeNSView` runs once per view identity. Subscribe to publishers, attach delegates, install one-time observers here.
+- `updateNSView` runs on every SwiftUI render. Sync mutable state (e.g. `coordinator.parent = self`, scheme handler `allowedRoot`); don't reinstall observers, recreate handlers, or rebuild caches.
+- Long-lived state (cancellables, timers, caches, observer tokens) lives on the Coordinator and is torn down in `deinit`. Use `[weak self]` for closures stored beyond the call site (`DispatchWorkItem`, Combine sinks, `NotificationCenter` blocks).
+- `WKWebViewConfiguration.setURLSchemeHandler` is captured at WebView creation — it cannot be swapped. If the handler's state needs to change, mutate the handler in place via the Coordinator's strong reference.
+
+### Editor (NSTextView)
+
+- Use `NSTextView`, not SwiftUI `TextEditor`. The find bar (`usesFindBar = true`), IME, undo, and continuous spell check rely on it.
+- Always check `textView.hasMarkedText()` before mutating text or attributes. IME composition is in flight; defer until the composed text is committed.
+- Highlighting is debounced (~150ms) and scoped to the affected paragraph (`SyntaxHighlighter.expandedRange`). Full re-highlight only when a fenced code block boundary is crossed.
+- Seed `typingAttributes` whenever the theme or font changes — newly-typed characters render with these *before* the next highlighter pass.
+- Find/Replace flow through `performTextFinderAction:` via the AppKit responder chain (see `FindCommands`). Don't reimplement these in SwiftUI.
+
+### Preview (WKWebView)
+
+- Shell HTML (`<head>` + theme CSS + empty `<div id="content">`) loads once via `loadHTMLString`. Subsequent updates inject `document.getElementById('content').innerHTML = JSON.parse(<literal>)` to preserve scroll position natively.
+- Full reload only when `theme.id` or `baseURL` changes (`PreviewView.applyUpdate`).
+- One `LocalAssetSchemeHandler` instance per WebView, scoped to that document's directory. Never a shared singleton.
+
+### Security boundaries
+
+The trust boundary for local file access is the `marsedit-asset:` scheme handler **plus** the resolver. Anything that emits a URL the WebView will load must enforce containment on both sides.
+
+- `MarkdownRenderer.resolveLocalImageSources` strips out-of-bounds image refs at emission. Out-of-bounds → empty `src`.
+- `LocalAssetSchemeHandler.allowedRoot` rejects out-of-bounds requests at load via `MarkdownRenderer.isPath(_:containedIn:)`. The check uses a trailing-`/` boundary (so `/docs/Foo` doesn't match `/docs/FooBar/baz`); symlinks intentionally not resolved.
+- New URL schemes are blocked at sanitization (`MarkdownRenderer.sanitizeLinkURL`, `sanitizeImageURL`), not at consumers. Currently blocked: `javascript:`, `vbscript:`, `data:` (except whitelisted image MIMEs).
+- Don't relax CSP without understanding what depends on it. `file:` in `exportCSPPolicy` is required for exported HTML to render local images when re-opened in a browser; remove it only if you also inline images as `data:` URLs.
+
+### Mac platform conventions
+
+These follow Apple HIG and document-based app expectations.
+
+- **Multi-document model.** Each window is independent; menu commands act on the focused scene. Use `@FocusedValue` (macOS 13+) — `@FocusedObject` is macOS 14+ and we target 13+.
+- **Standard editing actions** (Find, Replace, Cut/Copy/Paste, Undo/Redo, font size) ride the AppKit responder chain via tag-based selectors. Don't replace them with custom SwiftUI handlers.
+- **Files live where the user expects.** Drag-dropped images go in `Assets/` next to the document (visible in Finder), not in app sandbox storage.
+- **Settings persist in `UserDefaults`** via `@AppStorage`. No iCloud sync without explicit user opt-in.
+- **Appearance follows the system** unless the user explicitly overrode it (`AppearanceMode.system` is the default; `applyAppearanceMode` only sets `NSApp.appearance` for non-system modes).
+- **Keyboard shortcuts match Mac defaults.** `.command` for primary, `.shift` for capitalized/inverted variants, `.option` for alternatives. Bold = ⌘B, Italic = ⌘I, Cycle View Mode = ⇧⌘P, etc.
+- **Native widgets, not reskins.** `HSplitView`, `NSSavePanel`, `NSAlert`, `NSPrintOperation` — use the system controls so users get the system behaviors (drag handles, sandbox prompts, accessibility, localization) for free.
 
 ## What this project does NOT have
 
