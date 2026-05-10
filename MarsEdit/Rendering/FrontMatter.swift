@@ -56,7 +56,8 @@ struct FrontMatter {
         var cursor = source.startIndex
         var lineStarts: [String.Index] = [cursor]
         for line in lines.dropLast() {
-            cursor = source.index(cursor, offsetBy: line.count)
+            let remaining = source.distance(from: cursor, to: source.endIndex)
+            cursor = source.index(cursor, offsetBy: min(line.count, remaining))
             if cursor < source.endIndex {
                 cursor = source.index(after: cursor) // skip the \n
             }
@@ -65,7 +66,8 @@ struct FrontMatter {
 
         let startIdx = source.startIndex
         let closingLineStart = lineStarts[closing]
-        var endIdx = source.index(closingLineStart, offsetBy: lines[closing].count)
+        let closingRemaining = source.distance(from: closingLineStart, to: source.endIndex)
+        var endIdx = source.index(closingLineStart, offsetBy: min(lines[closing].count, closingRemaining))
         if endIdx < source.endIndex {
             endIdx = source.index(after: endIdx) // include the trailing \n
         }

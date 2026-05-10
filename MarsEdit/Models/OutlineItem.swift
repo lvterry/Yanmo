@@ -19,8 +19,9 @@ struct OutlineParser {
 
         while lineStart < length {
             let lineRange = nsText.lineRange(for: NSRange(location: lineStart, length: 0))
+            let lineEnd = min(lineRange.location + lineRange.length, length)
             // Content range excludes the newline character(s)
-            var contentEnd = lineRange.location + lineRange.length
+            var contentEnd = lineEnd
             while contentEnd > lineRange.location {
                 let prev = contentEnd - 1
                 let ch = nsText.character(at: prev)
@@ -34,7 +35,9 @@ struct OutlineParser {
             let line = nsText.substring(with: contentRange)
 
             // Advance past the full line (including newline) for the next iteration
-            lineStart = lineRange.location + lineRange.length
+            let nextStart = lineEnd
+            if nextStart <= lineStart { break } // safety: ensure forward progress
+            lineStart = nextStart
 
             if let fence = codeFence(in: line) {
                 if let active = activeFence {

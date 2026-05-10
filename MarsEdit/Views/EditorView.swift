@@ -75,7 +75,7 @@ struct EditorView: NSViewRepresentable {
             context.coordinator.isUpdating = true
             let selectedRange = textView.selectedRange()
             textView.string = document.text
-            textView.setSelectedRange(Self.clampedRange(selectedRange, upperBound: textView.string.utf16.count))
+            textView.setSelectedRange(Self.clampedRange(selectedRange, upperBound: (textView.string as NSString).length))
             context.coordinator.isUpdating = false
             textWasSetExternally = true
         }

@@ -95,7 +95,7 @@ struct MarkdownRenderer {
             .replacingOccurrences(of: "\t", with: "")
             .replacingOccurrences(of: "\n", with: "")
 
-        let blocked = ["javascript:", "vbscript:", "data:"]
+        let blocked = ["javascript:", "vbscript:", "data:", "file:"]
         for scheme in blocked {
             if lower.hasPrefix(scheme) { return "" }
         }
