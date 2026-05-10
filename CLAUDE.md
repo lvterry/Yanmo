@@ -9,9 +9,14 @@ The `.xcodeproj` is **generated** by [XcodeGen](https://github.com/yonaskolb/Xco
 ```sh
 xcodegen generate          # after editing project.yml
 open MarsEdit.xcodeproj
+xcodebuild -scheme MarsEdit -destination 'platform=macOS' test   # run the test suite
 ```
 
-Only third-party dependency: `swift-markdown` (Apple, SwiftPM, declared in `project.yml`). No tests target. No CI.
+Only third-party dependency: `swift-markdown` (Apple, SwiftPM, declared in `project.yml`). No CI.
+
+## Tests
+
+XCTest target `MarsEditTests` (`MarsEditTests/`) covers pure-logic and security-sensitive modules: `FrontMatter`, `OutlineItem` parsing, and `MarkdownRenderer` (sanitization + local-asset path resolution). UI, AppKit, and WebKit layers are not unit-tested — verify those by running the app. When changing renderer sanitization or `LocalAssetSchemeHandler` containment, add a corresponding test.
 
 ## Layout
 
@@ -143,4 +148,4 @@ These follow Apple HIG and document-based app expectations.
 
 ## What this project does NOT have
 
-No tests target. No CI config. No localization beyond English. No plugin system. No iCloud sync. No networking beyond what the preview WebView naturally does.
+No CI config. No localization beyond English. No plugin system. No iCloud sync. No networking beyond what the preview WebView naturally does. UI / AppKit / WebKit layers are not unit-tested.
