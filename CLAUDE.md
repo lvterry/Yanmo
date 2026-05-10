@@ -18,6 +18,8 @@ Only third-party dependency: `swift-markdown` (Apple, SwiftPM, declared in `proj
 
 XCTest target `MarsEditTests` (`MarsEditTests/`) covers pure-logic and security-sensitive modules: `FrontMatter`, `OutlineItem` parsing, and `MarkdownRenderer` (sanitization + local-asset path resolution). UI, AppKit, and WebKit layers are not unit-tested — verify those by running the app. When changing renderer sanitization or `LocalAssetSchemeHandler` containment, add a corresponding test.
 
+**Run the test suite before committing any code change**, even ones that look UI-only — `MarkdownRenderer`, `FrontMatter`, and `OutlineItem` are imported widely and a refactor elsewhere can break them. Use `xcodebuild -scheme MarsEdit -destination 'platform=macOS' test`. Don't commit on a red suite.
+
 ## Layout
 
 ```
