@@ -26,22 +26,27 @@ private struct EditorTab: View {
 
     var body: some View {
         Form {
-            HStack {
-                Text("Font:")
-                TextField("Font name", text: $settings.editorFontName)
-                    .frame(width: 160)
-                Text("\(Int(settings.editorFontSize)) pt")
-                Stepper("", value: $settings.editorFontSize, in: 8...72)
-                    .labelsHidden()
+            LabeledContent("Font:") {
+                HStack {
+                    TextField("Font name", text: $settings.editorFontName)
+                        .labelsHidden()
+                        .frame(minWidth: 160)
+                    Text("\(Int(settings.editorFontSize)) pt")
+                        .monospacedDigit()
+                    Stepper("", value: $settings.editorFontSize, in: 8...72)
+                        .labelsHidden()
+                }
             }
 
             Toggle("Word wrap", isOn: $settings.wordWrap)
 
-            HStack {
-                Text("Reading speed:")
-                TextField("WPM", value: $settings.readingSpeedWPM, format: .number)
-                    .frame(width: 60)
-                Text("wpm")
+            LabeledContent("Reading speed:") {
+                HStack {
+                    TextField("WPM", value: $settings.readingSpeedWPM, format: .number)
+                        .labelsHidden()
+                        .frame(width: 70)
+                    Text("wpm")
+                }
             }
         }
         .formStyle(.grouped)
