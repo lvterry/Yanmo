@@ -28,9 +28,10 @@ private struct EditorTab: View {
         Form {
             LabeledContent("Font:") {
                 HStack {
-                    TextField("Font name", text: $settings.editorFontName)
-                        .labelsHidden()
-                        .frame(minWidth: 160)
+                    FontPickerButton(
+                        fontName: $settings.editorFontName,
+                        fontSize: $settings.editorFontSize
+                    )
                     Text("\(Int(settings.editorFontSize)) pt")
                         .monospacedDigit()
                     Stepper("", value: $settings.editorFontSize, in: 8...72)

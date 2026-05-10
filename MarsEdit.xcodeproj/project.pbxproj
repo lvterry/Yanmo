@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		054CE5EB3122518217B9AB5A /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 395BF64CF82855D86EBF6ADF /* PreferencesView.swift */; };
 		0B2D2D52B9331097FFE5F07F /* FrontMatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 867DD05AB2A6127C4F0C9C16 /* FrontMatterTests.swift */; };
+		139C96CDD864D59445C00BC6 /* FontPickerButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBB65AB57456E766DB965A88 /* FontPickerButton.swift */; };
 		29FB917002D9F0C99E9920F6 /* PDFExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EBCC1AED90F4E9D817849CD /* PDFExporter.swift */; };
 		389E52EB58448E98E2F7B108 /* MarkdownRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E8BD9EC61D10243746D8375 /* MarkdownRenderer.swift */; };
 		39B05F225A3403EA2B5F8EFB /* OutlineItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE1F66ED40FA0CF63619A642 /* OutlineItem.swift */; };
@@ -75,6 +76,7 @@
 		BE1F66ED40FA0CF63619A642 /* OutlineItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutlineItem.swift; sourceTree = "<group>"; };
 		C857F54D96BCEFE6D4B69D76 /* MarkdownRendererSanitizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownRendererSanitizationTests.swift; sourceTree = "<group>"; };
 		E2F65D66271440CB5F9CE106 /* HTMLExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTMLExporter.swift; sourceTree = "<group>"; };
+		EBB65AB57456E766DB965A88 /* FontPickerButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontPickerButton.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -101,6 +103,7 @@
 		44D526E77E9E008DAE1F3D37 /* Preferences */ = {
 			isa = PBXGroup;
 			children = (
+				EBB65AB57456E766DB965A88 /* FontPickerButton.swift */,
 				395BF64CF82855D86EBF6ADF /* PreferencesView.swift */,
 			);
 			path = Preferences;
@@ -299,6 +302,7 @@
 				8FCCDA2AEF867CE33430E2AB /* AppSettings.swift in Sources */,
 				63E14B19C7B2A071E738F8D9 /* ContentView.swift in Sources */,
 				D2F950B026B5841AB9850CBE /* EditorView.swift in Sources */,
+				139C96CDD864D59445C00BC6 /* FontPickerButton.swift in Sources */,
 				64DAD6CE57280B990E926310 /* FrontMatter.swift in Sources */,
 				AE8524BA70118DEF47401A8E /* HTMLExporter.swift in Sources */,
 				5BF232C6666BBD8C369EF651 /* LocalAssetSchemeHandler.swift in Sources */,
