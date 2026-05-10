@@ -84,13 +84,18 @@ struct EditorView: NSViewRepresentable {
             applyTheme(textView: textView)
         }
 
-        if settings.wordWrap {
-            textView.textContainer?.widthTracksTextView = true
-            textView.isHorizontallyResizable = false
-        } else {
-            textView.textContainer?.widthTracksTextView = false
-            textView.textContainer?.containerSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
-            textView.isHorizontallyResizable = true
+        if let container = textView.textContainer, container.widthTracksTextView != settings.wordWrap {
+            if settings.wordWrap {
+                let width = scrollView.contentSize.width
+                textView.isHorizontallyResizable = false
+                container.widthTracksTextView = true
+                container.containerSize = NSSize(width: width, height: CGFloat.greatestFiniteMagnitude)
+                textView.frame.size.width = width
+            } else {
+                container.widthTracksTextView = false
+                container.containerSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+                textView.isHorizontallyResizable = true
+            }
         }
 
         // Only re-highlight the whole document when something appearance-related changed
