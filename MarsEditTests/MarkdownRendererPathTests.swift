@@ -91,7 +91,7 @@ final class MarkdownRendererPathTests: XCTestCase {
     }
 
     func testLeavesFragmentSourcesUntouched() {
-        let html = #"<img src="#anchor">"#
+        let html = ##"<img src="#anchor">"##
         let resolved = MarkdownRenderer.resolveLocalImageSources(in: html, relativeTo: tempRoot)
         XCTAssertEqual(resolved, html)
     }
