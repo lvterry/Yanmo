@@ -12,6 +12,11 @@ struct PreviewView: NSViewRepresentable {
         Coordinator(self)
     }
 
+    private struct RenderedBody {
+        let raw: String
+        let resolved: String
+    }
+
     func makeNSView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
         config.preferences.setValue(true, forKey: "developerExtrasEnabled")
@@ -50,13 +55,14 @@ struct PreviewView: NSViewRepresentable {
     private func loadInitialShell(webView: WKWebView, coordinator: Coordinator) {
         let theme = settings.currentTheme
         let css = theme.loadCSS()
-        let body = renderedBody()
+        let rendered = renderedBody()
         let title = MarkdownRenderer.extractTitle(from: document.text)
-        let html = MarkdownRenderer.fullHTML(body: "<div id=\"content\">\(body)</div>", css: css, title: title)
+        let html = MarkdownRenderer.fullHTML(body: "<div id=\"content\">\(rendered.resolved)</div>", css: css, title: title)
 
         coordinator.lastThemeID = theme.id
         coordinator.lastBaseURL = baseURL
-        coordinator.lastBodyHTML = body
+        coordinator.lastRawHTML = rendered.raw
+        coordinator.lastBodyHTML = rendered.resolved
         coordinator.isShellLoaded = false
         coordinator.pendingBodyAfterLoad = nil
         webView.loadHTMLString(html, baseURL: baseURL)
@@ -73,7 +79,13 @@ struct PreviewView: NSViewRepresentable {
             return
         }
 
-        let body = renderedBody()
+        // Compare raw HTML first to skip the image-source resolver (which
+        // regex-walks the full HTML) when the document hasn't changed.
+        let raw = MarkdownRenderer.renderHTML(from: document.text)
+        if raw == coordinator.lastRawHTML { return }
+        coordinator.lastRawHTML = raw
+
+        let body = MarkdownRenderer.resolveLocalImageSources(in: raw, relativeTo: baseURL)
         if body == coordinator.lastBodyHTML { return }
         coordinator.lastBodyHTML = body
 
@@ -85,11 +97,10 @@ struct PreviewView: NSViewRepresentable {
         injectBody(body, into: webView)
     }
 
-    private func renderedBody() -> String {
-        MarkdownRenderer.resolveLocalImageSources(
-            in: MarkdownRenderer.renderHTML(from: document.text),
-            relativeTo: baseURL
-        )
+    private func renderedBody() -> RenderedBody {
+        let raw = MarkdownRenderer.renderHTML(from: document.text)
+        let resolved = MarkdownRenderer.resolveLocalImageSources(in: raw, relativeTo: baseURL)
+        return RenderedBody(raw: raw, resolved: resolved)
     }
 
     fileprivate func injectBody(_ body: String, into webView: WKWebView) {
@@ -125,6 +136,7 @@ struct PreviewView: NSViewRepresentable {
         var isShellLoaded = false
         var lastThemeID: String?
         var lastBaseURL: URL?
+        var lastRawHTML: String?
         var lastBodyHTML: String?
         var pendingBodyAfterLoad: String?
 
