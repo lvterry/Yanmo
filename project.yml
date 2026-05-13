@@ -18,8 +18,10 @@ targets:
         excludes:
           - "Resources/**"
           - "Assets.xcassets"
-      - path: MarsEdit/Resources
+      - path: MarsEdit/Resources/Themes
         type: folder
+        buildPhase: resources
+      - path: MarsEdit/Resources/AppIcon.icon
         buildPhase: resources
       - path: MarsEdit/Assets.xcassets
     dependencies:

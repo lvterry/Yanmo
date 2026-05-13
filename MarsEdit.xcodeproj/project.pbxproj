@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		018C47AD90D12E924FB935AB /* Themes in Resources */ = {isa = PBXBuildFile; fileRef = 843E9465C84149EFE3A2897D /* Themes */; };
 		054CE5EB3122518217B9AB5A /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 395BF64CF82855D86EBF6ADF /* PreferencesView.swift */; };
 		0B2D2D52B9331097FFE5F07F /* FrontMatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 867DD05AB2A6127C4F0C9C16 /* FrontMatterTests.swift */; };
 		139C96CDD864D59445C00BC6 /* FontPickerButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBB65AB57456E766DB965A88 /* FontPickerButton.swift */; };
@@ -22,10 +23,10 @@
 		64B6AECBAE917264F12617A7 /* MarkdownRendererSanitizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C857F54D96BCEFE6D4B69D76 /* MarkdownRendererSanitizationTests.swift */; };
 		64DAD6CE57280B990E926310 /* FrontMatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F1089D73E20F33F2E47B987 /* FrontMatter.swift */; };
 		85330739355F9C463E4CD075 /* StatusBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F5AA75F8D7583B0C4F9EC47 /* StatusBarView.swift */; };
+		8B9EC8350F78E0AB7B8F3CA1 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = F16EEAA6812CEF1367E5E70E /* AppIcon.icon */; };
 		8FCCDA2AEF867CE33430E2AB /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07E12825E60D469770896AD0 /* AppSettings.swift */; };
 		929BFDB34349884B9D3204E8 /* ViewMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E4312776DC33D2DB60D5F74 /* ViewMode.swift */; };
 		A26DA0986A8ED17D4499DAB6 /* MarsEditApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38D0B910556CD1F896CE0C9B /* MarsEditApp.swift */; };
-		A81026088E46137359D19D47 /* Resources in Resources */ = {isa = PBXBuildFile; fileRef = 6E4CFD1F4E760E384D7320A0 /* Resources */; };
 		ADA17B0E251ED049FAEFEBE9 /* MarkdownRendererPathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3B0441B5C1CFE265BB59C9 /* MarkdownRendererPathTests.swift */; };
 		AE8524BA70118DEF47401A8E /* HTMLExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2F65D66271440CB5F9CE106 /* HTMLExporter.swift */; };
 		BD7F62953EDA1D99879C8834 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1B34FBAE39268193D3A8FDB7 /* Assets.xcassets */; };
@@ -62,9 +63,9 @@
 		3987A695942E6DBB85EF8C88 /* PreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewView.swift; sourceTree = "<group>"; };
 		5236D5774EBD359052AEDEFD /* MarsEditTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MarsEditTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5A6C29EF814D1782BFA80831 /* MarsEdit.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MarsEdit.entitlements; sourceTree = "<group>"; };
-		6E4CFD1F4E760E384D7320A0 /* Resources */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Resources; path = MarsEdit/Resources; sourceTree = SOURCE_ROOT; };
 		7E4312776DC33D2DB60D5F74 /* ViewMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewMode.swift; sourceTree = "<group>"; };
 		80AA1CD18CAE69F9F389B729 /* OutlineSidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutlineSidebar.swift; sourceTree = "<group>"; };
+		843E9465C84149EFE3A2897D /* Themes */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Themes; path = MarsEdit/Resources/Themes; sourceTree = SOURCE_ROOT; };
 		867DD05AB2A6127C4F0C9C16 /* FrontMatterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrontMatterTests.swift; sourceTree = "<group>"; };
 		8EBCC1AED90F4E9D817849CD /* PDFExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFExporter.swift; sourceTree = "<group>"; };
 		8F1089D73E20F33F2E47B987 /* FrontMatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrontMatter.swift; sourceTree = "<group>"; };
@@ -77,6 +78,7 @@
 		C857F54D96BCEFE6D4B69D76 /* MarkdownRendererSanitizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownRendererSanitizationTests.swift; sourceTree = "<group>"; };
 		E2F65D66271440CB5F9CE106 /* HTMLExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTMLExporter.swift; sourceTree = "<group>"; };
 		EBB65AB57456E766DB965A88 /* FontPickerButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontPickerButton.swift; sourceTree = "<group>"; };
+		F16EEAA6812CEF1367E5E70E /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -112,9 +114,10 @@
 		45C54025417235D821859C16 = {
 			isa = PBXGroup;
 			children = (
-				6E4CFD1F4E760E384D7320A0 /* Resources */,
+				843E9465C84149EFE3A2897D /* Themes */,
 				C45BAD11DA7C6F4A2D04C3D7 /* MarsEdit */,
 				67D344F23B0C01FDFBC70805 /* MarsEditTests */,
+				CB64465A1DF54BD874242167 /* Resources */,
 				04098D33C13E891E461050E7 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -181,6 +184,15 @@
 				E57FA953711D47C6DBB46507 /* Views */,
 			);
 			path = MarsEdit;
+			sourceTree = "<group>";
+		};
+		CB64465A1DF54BD874242167 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				F16EEAA6812CEF1367E5E70E /* AppIcon.icon */,
+			);
+			name = Resources;
+			path = MarsEdit/Resources;
 			sourceTree = "<group>";
 		};
 		E57FA953711D47C6DBB46507 /* Views */ = {
@@ -287,8 +299,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8B9EC8350F78E0AB7B8F3CA1 /* AppIcon.icon in Resources */,
 				BD7F62953EDA1D99879C8834 /* Assets.xcassets in Resources */,
-				A81026088E46137359D19D47 /* Resources in Resources */,
+				018C47AD90D12E924FB935AB /* Themes in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
