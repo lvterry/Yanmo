@@ -1,0 +1,4 @@
+#!/bin/sh
+# MarsEdit command-line launcher.
+# Opens file arguments in MarsEdit via Launch Services.
+exec /usr/bin/open -a "MarsEdit" "$@"

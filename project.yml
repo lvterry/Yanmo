@@ -23,6 +23,8 @@ targets:
         buildPhase: resources
       - path: MarsEdit/Resources/AppIcon.icon
         buildPhase: resources
+      - path: MarsEdit/Resources/mars
+        buildPhase: resources
       - path: MarsEdit/Assets.xcassets
     dependencies:
       - package: swift-markdown
