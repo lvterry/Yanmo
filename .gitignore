@@ -18,3 +18,6 @@ DerivedData/
 # Build artifacts
 build/
 dist/
+
+# Local planning scratchpad
+tasks/
