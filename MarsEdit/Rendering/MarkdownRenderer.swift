@@ -27,9 +27,25 @@ struct MarkdownRenderer {
         var rows = ""
         for entry in fm.entries {
             if let key = entry.key {
-                rows += "<tr><th>\(escapeHTML(key))</th><td>\(escapeHTML(entry.value))</td></tr>\n"
+                let padding: String
+                if entry.indent > 0 {
+                    let raw = 12 + entry.indent * 12
+                    let clamped = min(raw, 200)
+                    padding = " style=\"padding-left: \(clamped)px\""
+                } else {
+                    padding = ""
+                }
+                rows += "<tr><th\(padding)>\(escapeHTML(key))</th><td>\(escapeHTML(entry.value))</td></tr>\n"
             } else {
-                rows += "<tr><td colspan=\"2\"><code>\(escapeHTML(entry.value))</code></td></tr>\n"
+                let padding: String
+                if entry.indent > 0 {
+                    let raw = 12 + entry.indent * 12
+                    let clamped = min(raw, 200)
+                    padding = " style=\"padding-left: \(clamped)px\""
+                } else {
+                    padding = ""
+                }
+                rows += "<tr><td colspan=\"2\"\(padding)><code>\(escapeHTML(entry.value))</code></td></tr>\n"
             }
         }
         return "<table class=\"front-matter\">\n<tbody>\n\(rows)</tbody>\n</table>"

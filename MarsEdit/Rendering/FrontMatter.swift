@@ -7,13 +7,14 @@ struct FrontMatter {
     struct Entry {
         let key: String?
         let value: String
+        let indent: Int
     }
 
     let range: Range<String.Index>
     let entries: [Entry]
 
     private static let entryRegex = try! NSRegularExpression(
-        pattern: "^([A-Za-z0-9_-]+)\\s*:\\s*(.*)$"
+        pattern: "^\\s*([A-Za-z0-9_-]+)\\s*:\\s*(.*)$"
     )
 
     static func parse(_ source: String) -> FrontMatter? {
@@ -80,6 +81,16 @@ struct FrontMatter {
     }
 
     private static func parseLine(_ line: String) -> Entry? {
+        var indent = 0
+        for ch in line {
+            if ch == " " {
+                indent += 1
+            } else if ch == "\t" {
+                indent += 4
+            } else {
+                break
+            }
+        }
         let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty { return nil }
         let nsLine = line as NSString
@@ -89,9 +100,9 @@ struct FrontMatter {
             var value = nsLine.substring(with: match.range(at: 2))
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             value = stripQuotes(value)
-            return Entry(key: key, value: value)
+            return Entry(key: key, value: value, indent: indent)
         }
-        return Entry(key: nil, value: trimmed)
+        return Entry(key: nil, value: trimmed, indent: indent)
     }
 
     private static func stripQuotes(_ s: String) -> String {

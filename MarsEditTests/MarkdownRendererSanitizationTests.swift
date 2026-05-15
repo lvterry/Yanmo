@@ -124,4 +124,20 @@ final class MarkdownRendererSanitizationTests: XCTestCase {
         XCTAssertEqual(MarkdownRenderer.extractTitle(from: ""), "Untitled")
         XCTAssertEqual(MarkdownRenderer.extractTitle(from: "no headings here"), "Untitled")
     }
+
+    // MARK: renderFrontMatterTable (via renderHTML)
+
+    func testFrontMatterIndentRendersPadding() {
+        let html = MarkdownRenderer.renderHTML(from: """
+        ---
+        title: Root
+          sub: indented
+        ---
+        body
+        """)
+        // Top-level keyed entry (indent=0) → no style attribute on <th>
+        XCTAssertTrue(html.contains("<th>title</th>"), "Top-level <th> should have no inline style")
+        // Indented keyed entry (indent=2) → style="padding-left: 36px" on <th>
+        XCTAssertTrue(html.contains("<th style=\"padding-left: 36px\">sub</th>"), "Indented keyed <th> should have padding-left: 36px")
+    }
 }

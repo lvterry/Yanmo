@@ -62,4 +62,33 @@ final class FrontMatterTests: XCTestCase {
         let fm = FrontMatter.parse("---\ntag: a\ntag: b\n---\nbody")
         XCTAssertEqual(fm?.value(for: "tag"), "a")
     }
+
+    func testCapturesIndentForNestedLines() {
+        let tab = "\t"
+        let fm = FrontMatter.parse("""
+        ---
+        top: level
+          two-spaces
+        \(tab)one-tab
+        ---
+        body
+        """)
+        XCTAssertNotNil(fm)
+        XCTAssertEqual(fm?.entries.count, 3)
+
+        // Top-level key:value entry
+        XCTAssertEqual(fm?.entries[0].key, "top")
+        XCTAssertEqual(fm?.entries[0].value, "level")
+        XCTAssertEqual(fm?.entries[0].indent, 0)
+
+        // Two-space indented keyless entry
+        XCTAssertNil(fm?.entries[1].key)
+        XCTAssertEqual(fm?.entries[1].value, "two-spaces")
+        XCTAssertEqual(fm?.entries[1].indent, 2)
+
+        // Tab-indented keyless entry (tab = 4 spaces)
+        XCTAssertNil(fm?.entries[2].key)
+        XCTAssertEqual(fm?.entries[2].value, "one-tab")
+        XCTAssertEqual(fm?.entries[2].indent, 4)
+    }
 }
