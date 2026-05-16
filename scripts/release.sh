@@ -39,7 +39,7 @@ xcodebuild -scheme MarsEdit -destination 'platform=macOS' test >/dev/null
 echo "==> Building DMG"
 ./scripts/make-dmg.sh
 
-DMG_PATH="dist/MarsEdit-${VERSION}.dmg"
+DMG_PATH="dist/Yanmo-${VERSION}.dmg"
 if [[ ! -f "$DMG_PATH" ]]; then
   echo "expected DMG not found: $DMG_PATH" >&2
   exit 1
@@ -56,8 +56,8 @@ git push origin "v${VERSION}"
 
 echo "==> Creating GitHub release"
 gh release create "v${VERSION}" "$DMG_PATH" \
-  --title "MarsEdit ${VERSION}" \
+  --title "Yanmo ${VERSION}" \
   --notes-file "$NOTES_FILE"
 
 echo
-echo "Released v${VERSION}: https://github.com/lvterry/MarsEdit/releases/tag/v${VERSION}"
+echo "Released v${VERSION}: https://github.com/lvterry/Yanmo/releases/tag/v${VERSION}"
