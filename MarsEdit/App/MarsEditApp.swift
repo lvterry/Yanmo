@@ -13,7 +13,7 @@ struct MarsEditApp: App {
                 .frame(minWidth: 700, minHeight: 500)
         }
         .commands {
-            SkillCommands()
+            TemplateCommands(store: .shared)
             FormatCommands()
             FindCommands()
             ViewModeCommands(settings: settings)
@@ -188,53 +188,33 @@ private struct FontSizeCommands: Commands {
     }
 }
 
-// MARK: - Skill Template Commands
+// MARK: - Template Commands
 
-private struct SkillCommands: Commands {
+private struct TemplateCommands: Commands {
+    @ObservedObject var store: TemplateStore
     @Environment(\.newDocument) private var newDocument
 
     var body: some Commands {
         CommandGroup(after: .newItem) {
-            Button("New Skill") {
-                newDocument {
-                    MarkdownDocument(text: SkillTemplate.defaultText)
+            Menu("New from Template") {
+                if store.templates.isEmpty {
+                    Button("No Templates") {}
+                        .disabled(true)
+                } else {
+                    ForEach(store.templates) { template in
+                        Button(template.displayName) {
+                            guard let text = try? store.readContents(of: template) else { return }
+                            newDocument { MarkdownDocument(text: text) }
+                        }
+                    }
+                }
+                Divider()
+                Button("Reveal Templates Folder in Finder") {
+                    store.revealInFinder()
                 }
             }
         }
     }
-}
-
-private enum SkillTemplate {
-    static let defaultText = """
-    ---
-    name: my-skill
-    description: Use this skill when [describe the task, file type, workflow, or domain that should trigger it].
-    ---
-
-    # Skill Name
-
-    ## Purpose
-
-    Replace this section with the specific capability this skill provides and the situations where Codex should use it.
-
-    ## Workflow
-
-    1. Identify the relevant input, files, or user request.
-    2. Follow the task-specific steps for this skill.
-    3. Validate the output before responding.
-
-    ## References And Resources
-
-    Add only resources that directly support the skill:
-
-    - `references/` for detailed docs Codex should read only when needed.
-    - `scripts/` for repeatable or fragile operations that should run deterministically.
-    - `assets/` for templates, images, or files used in generated output.
-
-    ## Validation
-
-    Describe the checks Codex should run or the evidence it should inspect before considering the task complete.
-    """
 }
 
 // Lightweight protocol that exposes the AppKit selector to `#selector`.
