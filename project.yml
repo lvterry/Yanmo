@@ -21,6 +21,9 @@ targets:
       - path: MarsEdit/Resources/Themes
         type: folder
         buildPhase: resources
+      - path: MarsEdit/Resources/Templates
+        type: folder
+        buildPhase: resources
       - path: MarsEdit/Resources/AppIcon.icon
         buildPhase: resources
       - path: MarsEdit/Resources/mars
