@@ -16,7 +16,7 @@ Only third-party dependency: `swift-markdown` (Apple, SwiftPM, declared in `proj
 
 ## Tests
 
-XCTest target `MarsEditTests` (`MarsEditTests/`) covers pure-logic and security-sensitive modules: `FrontMatter`, `OutlineItem` parsing, and `MarkdownRenderer` (sanitization + local-asset path resolution). UI, AppKit, and WebKit layers are not unit-tested — verify those by running the app. When changing renderer sanitization or `LocalAssetSchemeHandler` containment, add a corresponding test.
+XCTest target `MarsEditTests` (`MarsEditTests/`) covers pure-logic and security-sensitive modules: `FrontMatter`, `OutlineItem` parsing, `MarkdownRenderer` (sanitization + local-asset path resolution), and `TemplateStore` (seeding + listing). UI, AppKit, and WebKit layers are not unit-tested — verify those by running the app. When changing renderer sanitization or `LocalAssetSchemeHandler` containment, add a corresponding test.
 
 **Run the test suite before committing any code change**, even ones that look UI-only — `MarkdownRenderer`, `FrontMatter`, and `OutlineItem` are imported widely and a refactor elsewhere can break them. Use `xcodebuild -scheme MarsEdit -destination 'platform=macOS' test`. Don't commit on a red suite.
 
@@ -26,12 +26,13 @@ XCTest target `MarsEditTests` (`MarsEditTests/`) covers pure-logic and security-
 MarsEdit/
 ├── App/             @main, DocumentGroup, menu commands
 ├── Document/        ReferenceFileDocument
-├── Models/          AppSettings, Theme, ViewMode, OutlineItem
+├── Models/          AppSettings, Theme, ViewMode, OutlineItem, TemplateStore
 ├── Views/           SwiftUI views + NSViewRepresentable wrappers
 ├── Rendering/       Markdown → HTML, syntax highlighting, front matter, asset scheme
 ├── Export/          HTML and PDF exporters
 ├── Preferences/     Settings UI
-└── Resources/Themes/  *.css for preview themes
+├── Resources/Themes/     *.css for preview themes
+└── Resources/Templates/  *.md seeds for File ▸ New from Template
 ```
 
 ## Data flow
@@ -54,6 +55,7 @@ text  ──>  MarkdownDocument  ──>  EditorView (NSTextView)
 | `Models/Theme.swift` | Six built-in themes; CSS lookup in `Resources/Themes/` |
 | `Models/ViewMode.swift` | split / editor-only / preview-only — persisted; defers WKWebView init |
 | `Models/OutlineItem.swift` | Heading parser for the sidebar |
+| `Models/TemplateStore.swift` | User templates dir (`~/Library/Application Support/MarsEdit/Templates/`), bundle-seeded on first launch |
 | `Views/ContentView.swift` | Layout, outline, export dialogs, toasts |
 | `Views/EditorView.swift` | **Largest file.** NSTextView wrapper, IME-safe, debounced highlight, image drag-drop |
 | `Views/PreviewView.swift` | WKWebView; HTML shell loaded once, body injected via JS |
@@ -75,6 +77,7 @@ text  ──>  MarkdownDocument  ──>  EditorView (NSTextView)
 - **Local images use `marsedit-asset://`.** `LocalAssetSchemeHandler` resolves relative paths against the document directory. Don't emit raw `file://` URLs in rendered HTML — the CSP allows `marsedit-asset:` (see `MarkdownRenderer.assetCSPPolicy`).
 - **HTML output is sanitized.** `javascript:` / `vbscript:` blocked; `data:` restricted to whitelisted image MIME types. Preserve sanitization when extending the renderer.
 - **Adding a theme.** Drop a CSS file in `MarsEdit/Resources/Themes/` and register it in `Theme.swift`.
+- **Adding a built-in template.** Drop a `.md` file in `MarsEdit/Resources/Templates/`. It seeds `~/Library/Application Support/MarsEdit/Templates/` on first launch *only* — once the user directory exists, the bundle copy is ignored and users own the directory. Display name in the menu = filename without `.md`; no front matter is parsed for the label.
 - **Settings.** Persisted via `@AppStorage` (UserDefaults). No iCloud sync.
 - **Image drag-drop.** Dropped images are saved as PNG into a sibling `Assets/` folder next to the document, and a relative markdown reference (`Assets/<filename>`) is inserted.
 
