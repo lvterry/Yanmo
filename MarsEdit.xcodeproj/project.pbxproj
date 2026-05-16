@@ -440,7 +440,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.marsedit.MarsEditTests;
 				SDKROOT = macosx;
 				SWIFT_VERSION = 5.9;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MarsEdit.app/Contents/MacOS/MarsEdit";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Yanmo.app/Contents/MacOS/Yanmo";
 			};
 			name = Release;
 		};
@@ -522,6 +522,8 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.marsedit.app;
+				PRODUCT_MODULE_NAME = MarsEdit;
+				PRODUCT_NAME = Yanmo;
 				SDKROOT = macosx;
 				SWIFT_VERSION = 5.9;
 			};
@@ -542,6 +544,8 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.marsedit.app;
+				PRODUCT_MODULE_NAME = MarsEdit;
+				PRODUCT_NAME = Yanmo;
 				SDKROOT = macosx;
 				SWIFT_VERSION = 5.9;
 			};
@@ -562,7 +566,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.marsedit.MarsEditTests;
 				SDKROOT = macosx;
 				SWIFT_VERSION = 5.9;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MarsEdit.app/Contents/MacOS/MarsEdit";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Yanmo.app/Contents/MacOS/Yanmo";
 			};
 			name = Debug;
 		};

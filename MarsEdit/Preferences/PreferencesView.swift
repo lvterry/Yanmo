@@ -117,7 +117,7 @@ private struct CommandLineTab: View {
     var body: some View {
         Form {
             Section {
-                Text("Install the `mars` command to open files in MarsEdit from Terminal.")
+                Text("Install the `mars` command to open files in Yanmo from Terminal.")
                     .fixedSize(horizontal: false, vertical: true)
 
                 LabeledContent("Status:") {

@@ -39,6 +39,8 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.marsedit.app
         MACOSX_DEPLOYMENT_TARGET: "13.0"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        PRODUCT_NAME: Yanmo
+        PRODUCT_MODULE_NAME: MarsEdit
     entitlements:
       path: MarsEdit/MarsEdit.entitlements
 
@@ -54,6 +56,8 @@ targets:
         SWIFT_VERSION: "5.9"
         MACOSX_DEPLOYMENT_TARGET: "13.0"
         GENERATE_INFOPLIST_FILE: "YES"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Yanmo.app/Contents/MacOS/Yanmo"
+        BUNDLE_LOADER: "$(TEST_HOST)"
 
 schemes:
   MarsEdit:
