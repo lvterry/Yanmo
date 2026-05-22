@@ -31,9 +31,30 @@ final class AppSettings: ObservableObject {
     @AppStorage("readingSpeedWPM") var readingSpeedWPM: Int = 200
 
     // MARK: - Appearance
-    @AppStorage("selectedThemeId") var selectedThemeId: String = ""
+    @AppStorage("selectedLightThemeId") var selectedLightThemeId: String = "default-light"
+    @AppStorage("selectedDarkThemeId")  var selectedDarkThemeId: String  = "default-dark"
     @AppStorage("appearanceMode") var appearanceMode: AppearanceMode = .system
     @AppStorage("pdfExportThemeId") var pdfExportThemeId: String = ""
+
+    private var _appearanceObserver: NSKeyValueObservation?
+
+    init() {
+        AppSettings.migrateIfNeeded(defaults: .standard)
+        _appearanceObserver = NSApp.observe(\.effectiveAppearance, options: [.new]) { [weak self] _, _ in
+            DispatchQueue.main.async { self?.objectWillChange.send() }
+        }
+    }
+
+    static func migrateIfNeeded(defaults: UserDefaults) {
+        guard let legacyId = defaults.string(forKey: "selectedThemeId"), !legacyId.isEmpty else { return }
+        if let legacyTheme = Theme.theme(for: legacyId) {
+            switch legacyTheme.mode {
+            case .light: defaults.set(legacyId, forKey: "selectedLightThemeId")
+            case .dark:  defaults.set(legacyId, forKey: "selectedDarkThemeId")
+            }
+        }
+        defaults.removeObject(forKey: "selectedThemeId")
+    }
 
     // MARK: - Export
     @AppStorage("defaultPageSize") var defaultPageSize: DefaultPageSize = .a4
@@ -44,16 +65,14 @@ final class AppSettings: ObservableObject {
     @AppStorage("viewMode") var viewMode: ViewMode = .defaultMode
 
     var currentTheme: Theme {
-        if !selectedThemeId.isEmpty, let theme = Theme.theme(for: selectedThemeId) {
-            return theme
-        }
         let isDark: Bool
         switch appearanceMode {
-        case .light: isDark = false
-        case .dark: isDark = true
+        case .light:  isDark = false
+        case .dark:   isDark = true
         case .system: isDark = NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
         }
-        return isDark ? Theme.defaultDark : Theme.defaultLight
+        let preferredId = isDark ? selectedDarkThemeId : selectedLightThemeId
+        return Theme.theme(for: preferredId) ?? (isDark ? Theme.defaultDark : Theme.defaultLight)
     }
 
     var editorFont: NSFont {

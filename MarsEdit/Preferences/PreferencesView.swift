@@ -18,7 +18,7 @@ struct PreferencesView: View {
                 .tabItem { Label("Command Line", systemImage: "terminal") }
         }
         .environmentObject(settings)
-        .frame(width: 480, height: 340)
+        .frame(width: 480, height: 380)
     }
 }
 
@@ -65,10 +65,15 @@ private struct AppearanceTab: View {
 
     var body: some View {
         Form {
-            Picker("Theme:", selection: $settings.selectedThemeId) {
-                Text("Follow System").tag("")
-                ForEach(Theme.builtIn, id: \.id) { theme in
-                    Text("\(theme.name) (\(theme.mode.rawValue.capitalized))").tag(theme.id)
+            Picker("Light Theme:", selection: $settings.selectedLightThemeId) {
+                ForEach(Theme.themes(for: .light), id: \.id) { theme in
+                    Text(theme.name).tag(theme.id)
+                }
+            }
+
+            Picker("Dark Theme:", selection: $settings.selectedDarkThemeId) {
+                ForEach(Theme.themes(for: .dark), id: \.id) { theme in
+                    Text(theme.name).tag(theme.id)
                 }
             }
 

@@ -31,6 +31,10 @@ struct Theme: Identifiable, Codable, Hashable {
         builtIn.first { $0.id == id }
     }
 
+    static func themes(for mode: ThemeMode) -> [Theme] {
+        builtIn.filter { $0.mode == mode }
+    }
+
     func loadCSS() -> String {
         // Try multiple bundle lookup strategies (folder reference vs group)
         let lookups: [URL?] = [
