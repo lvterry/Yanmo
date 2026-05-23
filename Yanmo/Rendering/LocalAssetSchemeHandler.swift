@@ -2,7 +2,7 @@ import Foundation
 import UniformTypeIdentifiers
 import WebKit
 
-/// Resolves `marsedit-asset://local/...` URLs in the preview/PDF WebView to
+/// Resolves `yanmo-asset://local/...` URLs in the preview/PDF WebView to
 /// local file contents. Each instance is scoped to a single document directory
 /// — requests for files outside that directory are refused, so a maliciously
 /// crafted markdown file can't use `..`-traversal to read arbitrary files
@@ -11,7 +11,7 @@ final class LocalAssetSchemeHandler: NSObject, WKURLSchemeHandler {
     /// Files outside this directory are rejected. `nil` rejects every
     /// request, which is correct for untitled documents (they have no
     /// anchored directory and `MarkdownRenderer.resolveLocalImageSources`
-    /// doesn't emit any `marsedit-asset://` URLs for them anyway).
+    /// doesn't emit any `yanmo-asset://` URLs for them anyway).
     var allowedRoot: URL?
 
     init(allowedRoot: URL?) {

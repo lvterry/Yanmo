@@ -1,4 +1,4 @@
-# MarsEdit
+# Yanmo
 
 Native macOS markdown editor with live preview. SwiftUI shell + AppKit text editing + WebKit preview. Targets macOS 13+, Swift 5.9. ~3K LOC.
 
@@ -8,22 +8,22 @@ The `.xcodeproj` is **generated** by [XcodeGen](https://github.com/yonaskolb/Xco
 
 ```sh
 xcodegen generate          # after editing project.yml
-open MarsEdit.xcodeproj
-xcodebuild -scheme MarsEdit -destination 'platform=macOS' test   # run the test suite
+open Yanmo.xcodeproj
+xcodebuild -scheme Yanmo -destination 'platform=macOS' test   # run the test suite
 ```
 
 Only third-party dependency: `swift-markdown` (Apple, SwiftPM, declared in `project.yml`). No CI.
 
 ## Tests
 
-XCTest target `MarsEditTests` (`MarsEditTests/`) covers pure-logic and security-sensitive modules: `FrontMatter`, `OutlineItem` parsing, `MarkdownRenderer` (sanitization + local-asset path resolution), and `TemplateStore` (seeding + listing). UI, AppKit, and WebKit layers are not unit-tested — verify those by running the app. When changing renderer sanitization or `LocalAssetSchemeHandler` containment, add a corresponding test.
+XCTest target `YanmoTests` (`YanmoTests/`) covers pure-logic and security-sensitive modules: `FrontMatter`, `OutlineItem` parsing, `MarkdownRenderer` (sanitization + local-asset path resolution), and `TemplateStore` (seeding + listing). UI, AppKit, and WebKit layers are not unit-tested — verify those by running the app. When changing renderer sanitization or `LocalAssetSchemeHandler` containment, add a corresponding test.
 
-**Run the test suite before committing any code change**, even ones that look UI-only — `MarkdownRenderer`, `FrontMatter`, and `OutlineItem` are imported widely and a refactor elsewhere can break them. Use `xcodebuild -scheme MarsEdit -destination 'platform=macOS' test`. Don't commit on a red suite.
+**Run the test suite before committing any code change**, even ones that look UI-only — `MarkdownRenderer`, `FrontMatter`, and `OutlineItem` are imported widely and a refactor elsewhere can break them. Use `xcodebuild -scheme Yanmo -destination 'platform=macOS' test`. Don't commit on a red suite.
 
 ## Layout
 
 ```
-MarsEdit/
+Yanmo/
 ├── App/             @main, DocumentGroup, menu commands
 ├── Document/        ReferenceFileDocument
 ├── Models/          AppSettings, Theme, ViewMode, OutlineItem, TemplateStore
@@ -49,13 +49,13 @@ text  ──>  MarkdownDocument  ──>  EditorView (NSTextView)
 
 | File | Purpose |
 | --- | --- |
-| `App/MarsEditApp.swift` | `@main`, DocumentGroup, menu commands |
+| `App/YanmoApp.swift` | `@main`, DocumentGroup, menu commands |
 | `Document/MarkdownDocument.swift` | Plain-text doc; UTF-8 with ISO-8859-1 fallback |
 | `Models/AppSettings.swift` | `@AppStorage` singleton — font, theme, view mode, appearance |
 | `Models/Theme.swift` | Six built-in themes; CSS lookup in `Resources/Themes/` |
 | `Models/ViewMode.swift` | split / editor-only / preview-only — persisted; defers WKWebView init |
 | `Models/OutlineItem.swift` | Heading parser for the sidebar |
-| `Models/TemplateStore.swift` | User templates dir (`~/Library/Application Support/MarsEdit/Templates/`), bundle-seeded on first launch |
+| `Models/TemplateStore.swift` | User templates dir (`~/Library/Application Support/Yanmo/Templates/`), bundle-seeded on first launch |
 | `Views/ContentView.swift` | Layout, outline, export dialogs, toasts |
 | `Views/EditorView.swift` | **Largest file.** NSTextView wrapper, IME-safe, debounced highlight, image drag-drop |
 | `Views/PreviewView.swift` | WKWebView; HTML shell loaded once, body injected via JS |
@@ -63,7 +63,7 @@ text  ──>  MarkdownDocument  ──>  EditorView (NSTextView)
 | `Rendering/MarkdownRenderer.swift` | swift-markdown visitor → sanitized HTML |
 | `Rendering/SyntaxHighlighter.swift` | Regex-based NSTextView attributes; skips fenced code & front matter |
 | `Rendering/FrontMatter.swift` | Minimal YAML-like parser, `---` / `...` delimiters at doc start |
-| `Rendering/LocalAssetSchemeHandler.swift` | `marsedit-asset://` → local file resolver (preview only) |
+| `Rendering/LocalAssetSchemeHandler.swift` | `yanmo-asset://` → local file resolver (preview only) |
 | `Export/HTMLExporter.swift` · `Export/PDFExporter.swift` | Render + theme CSS → file |
 | `Preferences/PreferencesView.swift` | Settings UI |
 
@@ -74,10 +74,10 @@ text  ──>  MarkdownDocument  ──>  EditorView (NSTextView)
 - **NSTextView, not SwiftUI `TextEditor`.** Chosen for IME, find bar, performance. Don't replace.
 - **Debounced, scoped syntax highlighting (~150ms).** Must skip fenced code blocks and front matter regions. During IME composition (`textView.hasMarkedText()`) highlighting and updates are deferred — preserve this when changing the editor.
 - **Preview HTML shell loads once.** Subsequent updates inject the body via JS to preserve scroll position. Don't reload on every keystroke.
-- **Local images use `marsedit-asset://`.** `LocalAssetSchemeHandler` resolves relative paths against the document directory. Don't emit raw `file://` URLs in rendered HTML — the CSP allows `marsedit-asset:` (see `MarkdownRenderer.assetCSPPolicy`).
+- **Local images use `yanmo-asset://`.** `LocalAssetSchemeHandler` resolves relative paths against the document directory. Don't emit raw `file://` URLs in rendered HTML — the CSP allows `yanmo-asset:` (see `MarkdownRenderer.assetCSPPolicy`).
 - **HTML output is sanitized.** `javascript:` / `vbscript:` blocked; `data:` restricted to whitelisted image MIME types. Preserve sanitization when extending the renderer.
-- **Adding a theme.** Drop a CSS file in `MarsEdit/Resources/Themes/` and register it in `Theme.swift`.
-- **Adding a built-in template.** Drop a `.md` file in `MarsEdit/Resources/Templates/`. It seeds `~/Library/Application Support/MarsEdit/Templates/` on first launch *only* — once the user directory exists, the bundle copy is ignored and users own the directory. Display name in the menu = filename without `.md`; no front matter is parsed for the label.
+- **Adding a theme.** Drop a CSS file in `Yanmo/Resources/Themes/` and register it in `Theme.swift`.
+- **Adding a built-in template.** Drop a `.md` file in `Yanmo/Resources/Templates/`. It seeds `~/Library/Application Support/Yanmo/Templates/` on first launch *only* — once the user directory exists, the bundle copy is ignored and users own the directory. Display name in the menu = filename without `.md`; no front matter is parsed for the label.
 - **Settings.** Persisted via `@AppStorage` (UserDefaults). No iCloud sync.
 - **Image drag-drop.** Dropped images are saved as PNG into a sibling `Assets/` folder next to the document, and a relative markdown reference (`Assets/<filename>`) is inserted.
 
@@ -132,7 +132,7 @@ Two paths run dozens of times per second on multi-MB documents: per-keystroke hi
 
 ### Security boundaries
 
-The trust boundary for local file access is the `marsedit-asset:` scheme handler **plus** the resolver. Anything that emits a URL the WebView will load must enforce containment on both sides.
+The trust boundary for local file access is the `yanmo-asset:` scheme handler **plus** the resolver. Anything that emits a URL the WebView will load must enforce containment on both sides.
 
 - `MarkdownRenderer.resolveLocalImageSources` strips out-of-bounds image refs at emission. Out-of-bounds → empty `src`.
 - `LocalAssetSchemeHandler.allowedRoot` rejects out-of-bounds requests at load via `MarkdownRenderer.isPath(_:containedIn:)`. The check uses a trailing-`/` boundary (so `/docs/Foo` doesn't match `/docs/FooBar/baz`); symlinks intentionally not resolved.

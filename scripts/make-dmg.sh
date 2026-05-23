@@ -5,7 +5,7 @@ cd "$(dirname "$0")/.."
 xcodegen generate
 
 APP_NAME="Yanmo"
-PROJECT_NAME="MarsEdit"
+PROJECT_NAME="Yanmo"
 VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "${PROJECT_NAME}/Info.plist")
 BUILD_DIR="build"
 DIST_DIR="dist"

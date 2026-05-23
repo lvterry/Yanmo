@@ -122,7 +122,7 @@ private struct CommandLineTab: View {
     var body: some View {
         Form {
             Section {
-                Text("Install the `mars` command to open files in Yanmo from Terminal.")
+                Text("Install the `yanmo` command to open files in Yanmo from Terminal.")
                     .fixedSize(horizontal: false, vertical: true)
 
                 LabeledContent("Status:") {
@@ -136,9 +136,9 @@ private struct CommandLineTab: View {
 
                 LabeledContent("Usage:") {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("mars notes.md").font(.system(.body, design: .monospaced))
-                        Text("mars a.md b.md").font(.system(.body, design: .monospaced))
-                        Text("mars").font(.system(.body, design: .monospaced))
+                        Text("yanmo notes.md").font(.system(.body, design: .monospaced))
+                        Text("yanmo a.md b.md").font(.system(.body, design: .monospaced))
+                        Text("yanmo").font(.system(.body, design: .monospaced))
                     }
                     .foregroundStyle(.secondary)
                 }
@@ -169,7 +169,7 @@ private struct CommandLineTab: View {
         case .installedElsewhere:
             HStack(spacing: 4) {
                 Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.yellow)
-                Text("Another `mars` exists at \(installer.installPath.path)")
+                Text("Another `yanmo` exists at \(installer.installPath.path)")
             }
         case .unavailable(let reason):
             Text(reason).italic().foregroundStyle(.secondary)

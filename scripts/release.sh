@@ -26,7 +26,7 @@ if git rev-parse "v${VERSION}" >/dev/null 2>&1; then
   exit 1
 fi
 
-INFO_PLIST="MarsEdit/Info.plist"
+INFO_PLIST="Yanmo/Info.plist"
 CURRENT_BUILD=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$INFO_PLIST")
 NEW_BUILD=$((CURRENT_BUILD + 1))
 
@@ -34,7 +34,7 @@ NEW_BUILD=$((CURRENT_BUILD + 1))
 /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${NEW_BUILD}" "$INFO_PLIST"
 
 echo "==> Running tests"
-xcodebuild -scheme MarsEdit -destination 'platform=macOS' test >/dev/null
+xcodebuild -scheme Yanmo -destination 'platform=macOS' test >/dev/null
 
 echo "==> Building DMG"
 ./scripts/make-dmg.sh

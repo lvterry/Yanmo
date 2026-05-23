@@ -2,7 +2,7 @@ import Foundation
 import Markdown
 
 struct MarkdownRenderer {
-    static let localAssetScheme = "marsedit-asset"
+    static let localAssetScheme = "yanmo-asset"
 
     /// Converts Markdown source text to an HTML string using swift-markdown (GFM).
     static func renderHTML(from markdown: String) -> String {
@@ -52,7 +52,7 @@ struct MarkdownRenderer {
     }
 
     /// Wraps rendered HTML body with a full HTML document including theme CSS.
-    static let assetCSPPolicy = "https: http: data: marsedit-asset:"
+    static let assetCSPPolicy = "https: http: data: yanmo-asset:"
     static let exportCSPPolicy = "https: http: data: file:"
 
     static func fullHTML(body: String, css: String, title: String = "", cspImageSources: String = assetCSPPolicy) -> String {

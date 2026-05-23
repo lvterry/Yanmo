@@ -16,14 +16,14 @@ final class CommandLineToolInstaller: ObservableObject {
         case failure(String)
     }
 
-    static let defaultInstallPath = URL(fileURLWithPath: "/usr/local/bin/mars")
+    static let defaultInstallPath = URL(fileURLWithPath: "/usr/local/bin/yanmo")
 
     @Published private(set) var status: Status = .notInstalled
 
     let scriptURL: URL?
     let installPath: URL
 
-    init(scriptURL: URL? = Bundle.main.url(forResource: "mars", withExtension: nil),
+    init(scriptURL: URL? = Bundle.main.url(forResource: "yanmo", withExtension: nil),
          installPath: URL = CommandLineToolInstaller.defaultInstallPath) {
         self.scriptURL = scriptURL
         self.installPath = installPath
@@ -36,10 +36,10 @@ final class CommandLineToolInstaller: ObservableObject {
 
     nonisolated static func evaluate(scriptURL: URL?, installPath: URL) -> Status {
         guard let scriptURL else {
-            return .unavailable(reason: "Bundled `mars` script not found.")
+            return .unavailable(reason: "Bundled `yanmo` script not found.")
         }
         if !FileManager.default.fileExists(atPath: scriptURL.path) {
-            return .unavailable(reason: "Bundled `mars` script not found.")
+            return .unavailable(reason: "Bundled `yanmo` script not found.")
         }
 
         let fm = FileManager.default
@@ -63,7 +63,7 @@ final class CommandLineToolInstaller: ObservableObject {
 
     func install() -> ActionResult {
         guard let scriptURL else {
-            return .failure("Bundled `mars` script not found.")
+            return .failure("Bundled `yanmo` script not found.")
         }
         let scriptPath = scriptURL.path
         let installPathStr = installPath.path

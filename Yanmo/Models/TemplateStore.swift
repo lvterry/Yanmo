@@ -5,7 +5,7 @@ import Foundation
 /// App-wide store for user-editable markdown templates surfaced under
 /// File ▸ New from Template.
 ///
-/// Templates live in `~/Library/Application Support/MarsEdit/Templates/` so
+/// Templates live in `~/Library/Application Support/Yanmo/Templates/` so
 /// users can freely edit them in Finder. On first launch (when the user
 /// directory does not yet exist), seed templates bundled with the app are
 /// copied in. Once the directory exists we never touch its contents — if the
@@ -63,7 +63,7 @@ final class TemplateStore: ObservableObject {
         )) ?? FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent("Library/Application Support", isDirectory: true)
         return appSupport
-            .appendingPathComponent("MarsEdit", isDirectory: true)
+            .appendingPathComponent("Yanmo", isDirectory: true)
             .appendingPathComponent("Templates", isDirectory: true)
     }
 

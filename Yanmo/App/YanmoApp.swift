@@ -3,7 +3,7 @@ import AppKit
 import Combine
 
 @main
-struct MarsEditApp: App {
+struct YanmoApp: App {
     @StateObject private var settings = AppSettings.shared
 
     var body: some Scene {

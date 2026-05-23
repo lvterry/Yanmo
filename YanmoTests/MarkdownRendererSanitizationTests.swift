@@ -1,5 +1,5 @@
 import XCTest
-@testable import MarsEdit
+@testable import Yanmo
 
 final class MarkdownRendererSanitizationTests: XCTestCase {
     // MARK: escapeHTML

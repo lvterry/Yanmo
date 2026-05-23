@@ -1,5 +1,5 @@
 import XCTest
-@testable import MarsEdit
+@testable import Yanmo
 
 final class CommandLineToolInstallerTests: XCTestCase {
     private var tempDir: URL!
@@ -17,7 +17,7 @@ final class CommandLineToolInstallerTests: XCTestCase {
 
     private func makeScript() throws -> URL {
         let url = tempDir.appendingPathComponent("mars")
-        try "#!/bin/sh\nexec /usr/bin/open -a MarsEdit \"$@\"\n".write(to: url, atomically: true, encoding: .utf8)
+        try "#!/bin/sh\nexec /usr/bin/open -a Yanmo \"$@\"\n".write(to: url, atomically: true, encoding: .utf8)
         return url
     }
 

@@ -1,0 +1,4 @@
+#!/bin/sh
+# Yanmo command-line launcher.
+# Opens file arguments in Yanmo via Launch Services.
+exec /usr/bin/open -a "Yanmo" "$@"

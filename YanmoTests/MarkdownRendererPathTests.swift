@@ -1,12 +1,12 @@
 import XCTest
-@testable import MarsEdit
+@testable import Yanmo
 
 final class MarkdownRendererPathTests: XCTestCase {
     private var tempRoot: URL!
 
     override func setUpWithError() throws {
         tempRoot = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
-            .appendingPathComponent("MarsEditTests-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("YanmoTests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: tempRoot, withIntermediateDirectories: true)
     }
 
