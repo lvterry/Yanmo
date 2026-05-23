@@ -155,6 +155,69 @@ struct EditorView: NSViewRepresentable {
 
         private static let syntaxHighlightDebounce: TimeInterval = 0.15
 
+        private static let listMarkerRegex: NSRegularExpression = {
+            // indent, then optional marker (ordered, task, or unordered), then rest
+            try! NSRegularExpression(
+                pattern: #"^([ \t]*)(\d+\.[ \t]+|[-*+][ \t]+\[[ xX]\][ \t]+|[-*+][ \t]+)?(.*)$"#
+            )
+        }()
+
+        static func transformListLine(_ line: String, action: FormatAction, orderedIndex: Int, forceStrip: Bool) -> String {
+            let parts = decomposeListLine(line)
+            if forceStrip {
+                return parts.indent + parts.rest
+            }
+            let newMarker: String
+            switch action {
+            case .orderedList: newMarker = "\(orderedIndex). "
+            case .unorderedList: newMarker = "- "
+            case .taskList: newMarker = "- [ ] "
+            default: newMarker = ""
+            }
+            return parts.indent + newMarker + parts.rest
+        }
+
+        static func lineMatchesListKind(_ line: String, action: FormatAction) -> Bool {
+            let parts = decomposeListLine(line)
+            guard let kind = parts.kind else { return false }
+            return sameListKind(kind, action)
+        }
+
+        private static func decomposeListLine(_ line: String) -> (indent: String, kind: FormatAction?, rest: String) {
+            let nsLine = line as NSString
+            let fullRange = NSRange(location: 0, length: nsLine.length)
+            guard let match = listMarkerRegex.firstMatch(in: line, range: fullRange) else {
+                return ("", nil, line)
+            }
+            let indent = match.range(at: 1).location == NSNotFound ? "" : nsLine.substring(with: match.range(at: 1))
+            let markerRange = match.range(at: 2)
+            let existing = markerRange.location == NSNotFound ? "" : nsLine.substring(with: markerRange)
+            let rest = match.range(at: 3).location == NSNotFound ? "" : nsLine.substring(with: match.range(at: 3))
+
+            let kind: FormatAction?
+            if existing.isEmpty {
+                kind = nil
+            } else if existing.range(of: #"^\d+\.[ \t]+$"#, options: .regularExpression) != nil {
+                kind = .orderedList
+            } else if existing.range(of: #"^[-*+][ \t]+\[[ xX]\][ \t]+$"#, options: .regularExpression) != nil {
+                kind = .taskList
+            } else if existing.range(of: #"^[-*+][ \t]+$"#, options: .regularExpression) != nil {
+                kind = .unorderedList
+            } else {
+                kind = nil
+            }
+            return (indent, kind, rest)
+        }
+
+        private static func sameListKind(_ lhs: FormatAction, _ rhs: FormatAction) -> Bool {
+            switch (lhs, rhs) {
+            case (.orderedList, .orderedList), (.unorderedList, .unorderedList), (.taskList, .taskList):
+                return true
+            default:
+                return false
+            }
+        }
+
         var parent: EditorView
         var textView: MarkdownTextView?
         var scrollView: NSScrollView?
@@ -324,8 +387,34 @@ struct EditorView: NSViewRepresentable {
         func insertFormat(_ action: FormatAction) {
             guard let textView = textView else { return }
             let selectedRange = textView.selectedRange()
-            let selectedText = (textView.string as NSString).substring(with: selectedRange)
+            let ns = textView.string as NSString
 
+            if action.insertsAtLineStart {
+                let lineRange = ns.lineRange(for: selectedRange)
+                let original = ns.substring(with: lineRange)
+                let lines = original.components(separatedBy: "\n")
+                let contentIndices = lines.indices.filter { !(lines[$0].isEmpty && $0 == lines.count - 1) }
+                let allMatch = !contentIndices.isEmpty && contentIndices.allSatisfy {
+                    Self.lineMatchesListKind(lines[$0], action: action)
+                }
+                var orderedIndex = 1
+                let rewritten = lines.enumerated().map { index, line -> String in
+                    if index == lines.count - 1 && line.isEmpty { return line }
+                    let transformed = Self.transformListLine(
+                        line,
+                        action: action,
+                        orderedIndex: orderedIndex,
+                        forceStrip: allMatch
+                    )
+                    if case .orderedList = action, !allMatch { orderedIndex += 1 }
+                    return transformed
+                }
+                let replacement = rewritten.joined(separator: "\n")
+                textView.insertText(replacement, replacementRange: lineRange)
+                return
+            }
+
+            let selectedText = ns.substring(with: selectedRange)
             let replacement: String
             if action.isLinePrefix {
                 replacement = action.wrapPrefix + selectedText

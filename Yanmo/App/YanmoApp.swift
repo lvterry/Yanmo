@@ -314,4 +314,13 @@ enum FormatAction {
             return false
         }
     }
+
+    var insertsAtLineStart: Bool {
+        switch self {
+        case .orderedList, .unorderedList, .taskList:
+            return true
+        default:
+            return false
+        }
+    }
 }
